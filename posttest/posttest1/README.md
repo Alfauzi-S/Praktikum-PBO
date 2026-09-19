@@ -1,9 +1,7 @@
 # Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer
 
-> **Nama:** Muhammad Alfauzi Syahputra
->
-> **Mata Kuliah:** Pemrograman Berorientasi Objek
->
+> **Nama:** Muhammad Alfauzi Syahputra  
+> **Mata Kuliah:** Pemrograman Berorientasi Objek  
 > **Bahasa Pemrograman:** Python
 
 ---
@@ -12,48 +10,64 @@
 
 1. [Deskripsi Proyek](#deskripsi-proyek)
 2. [Struktur Proyek](#struktur-proyek)
-3. [Arsitektur & Desain OOP](#arsitektur--desain-oop)
+3. [Arsitektur dan Desain OOP](#arsitektur-dan-desain-oop)
 4. [Penjelasan Kelas](#penjelasan-kelas)
 5. [Fitur Aplikasi](#fitur-aplikasi)
 6. [Alur Program](#alur-program)
 7. [Cara Menjalankan](#cara-menjalankan)
 8. [Pengujian OOP](#pengujian-oop)
-9. [Contoh Penggunaan](#contoh-penggunaan)
+9. [Implementasi Kode Pengujian](#implementasi-kode-pengujian)
+10. [Contoh Penggunaan](#contoh-penggunaan)
+11. [Kesimpulan](#kesimpulan)
 
 ---
 
 ## Deskripsi Proyek
 
-Proyek ini merupakan **Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer** berbasis Command Line Interface (CLI) yang dibangun menggunakan Python.
+**Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer** adalah aplikasi berbasis Command Line Interface (CLI) yang dibangun menggunakan Python. Aplikasi ini digunakan untuk mengelola data produk, pelanggan, stok, dan transaksi penjualan.
 
-Aplikasi ini digunakan untuk mengelola data **product**, **customer**, dan **sales transaction**. Program menyediakan beberapa fitur seperti menampilkan product, mengelola stock, mengelola customer, membuat transaksi penjualan, menghitung total transaksi, serta menampilkan sales receipt.
+Fitur utama aplikasi meliputi:
 
-Proyek ini dibuat sebagai implementasi konsep **Object-Oriented Programming (OOP)** dengan menerapkan beberapa konsep seperti:
+- Menampilkan dan mengelola data produk.
+- Menambah serta mengurangi stok produk.
+- Mengelola data pelanggan.
+- Mengubah alamat dan status pelanggan.
+- Membuat transaksi penjualan.
+- Menghitung total transaksi dan menampilkan struk.
+- Mendemonstrasikan konsep-konsep Object-Oriented Programming (OOP).
 
-* Class dan Object
-* Class Attribute
-* Instance Attribute
-* Public Attribute
-* Private Attribute
-* Instance Method
-* Class Method
-* Static Method
-* Encapsulation
-* Getter dan Setter
-* Data Validation
-* Inheritance
-* Modularization
+Konsep OOP yang diterapkan adalah:
+
+- Class dan object.
+- Class attribute dan instance attribute.
+- Public dan private attribute.
+- Instance method, class method, dan static method.
+- Encapsulation, getter, dan setter.
+- Data validation.
+- Inheritance.
+- Package dan modularization.
 
 ---
 
 ## Struktur Proyek
 
 ```text
-computer_sales_management/
+posttest1/
 │
 ├── main.py                         # File utama program
 ├── requirements.txt                # Library yang digunakan
-├── README.md                       # Dokumentasi project
+├── README.md                       # Dokumentasi proyek
+│
+├── assets/                         # Screenshot hasil program
+│   ├── main_menu.png
+│   ├── menu_test.png
+│   ├── object_test.png
+│   ├── instance_test.png
+│   ├── class_method_test.png
+│   ├── static_method_test.png
+│   ├── getterandsetter_test.png
+│   ├── inheritance_test.png
+│   └── all_test.png
 │
 ├── models/
 │   ├── __init__.py
@@ -76,22 +90,18 @@ computer_sales_management/
 
 ---
 
-## Arsitektur & Desain OOP
+## Arsitektur dan Desain OOP
 
-Program menggunakan beberapa class yang memiliki tugas masing-masing.
-
-Struktur hubungan class:
+Hubungan antarclass dalam aplikasi:
 
 ```text
                  Person
                     │
-                    │ Inheritance
+                    │ inheritance
                     ▼
                 Customer
 
-
                 Product
-
 
                   Sale
              /             \
@@ -99,77 +109,52 @@ Struktur hubungan class:
        Customer          Product
 ```
 
-Class `Customer` merupakan turunan dari class `Person`.
-
-Sedangkan class `Sale` menggunakan object `Customer` dan `Product` untuk membentuk sebuah transaksi penjualan.
+`Customer` merupakan turunan dari `Person`, sedangkan `Sale` menggunakan object `Customer` dan `Product` untuk membentuk transaksi penjualan.
 
 ### Encapsulation
 
-Program menggunakan private attribute dengan double underscore `__`.
-
-Contoh pada class `Product`:
+Atribut yang perlu dilindungi disimpan sebagai private attribute menggunakan double underscore, contohnya:
 
 ```python
 self.__stock = stock
 ```
 
-Data tersebut tidak diakses secara langsung dari luar class, tetapi melalui `property`.
-
-Contoh:
+Atribut tersebut diakses melalui property:
 
 ```python
 @property
 def stock(self):
     return self.__stock
-```
 
-Setter juga digunakan untuk melakukan validasi:
-
-```python
 @stock.setter
 def stock(self, new_stock):
     if new_stock < 0:
-        raise ValueError(
-            "Stock cannot be negative!"
-        )
-    else:
-        self.__stock = new_stock
+        raise ValueError("Stock cannot be negative!")
+    self.__stock = new_stock
 ```
 
-Dengan demikian, nilai `stock` tidak dapat diubah menjadi nilai negatif.
+Dengan demikian, stok tidak dapat diubah menjadi nilai negatif.
 
 ### Inheritance
 
-Program menerapkan inheritance antara:
-
-```text
-Person
-   │
-   └── Customer
-```
-
-Implementasinya:
+Inheritance diterapkan pada class `Customer`:
 
 ```python
 class Customer(Person):
+    def __init__(self, id_customer, name, phone, address, status):
+        super().__init__(name, phone)
 ```
 
-Constructor dari parent class dipanggil menggunakan:
+Dengan inheritance, `Customer` dapat menggunakan attribute dan method yang berasal dari `Person`, termasuk `show_person_info()`.
 
-```python
-super().__init__(name, phone)
-```
+### Modularization
 
-Dengan inheritance tersebut, `Customer` dapat menggunakan attribute dan method yang berasal dari `Person`.
+Kode dipisahkan berdasarkan tanggung jawabnya:
 
-### Package / Modularization
-
-Program dibagi menjadi beberapa folder agar kode lebih terorganisir.
-
-* `models` bertanggung jawab terhadap class dan data.
-* `menus` bertanggung jawab terhadap menu dan interaksi pengguna.
-* `utils` berisi helper function yang digunakan oleh beberapa bagian program.
-* `main.py` digunakan untuk menjalankan program.
+- `models` berisi class dan data aplikasi.
+- `menus` berisi menu serta interaksi dengan pengguna.
+- `utils` berisi helper function.
+- `main.py` menjadi entry point aplikasi.
 
 ---
 
@@ -177,258 +162,106 @@ Program dibagi menjadi beberapa folder agar kode lebih terorganisir.
 
 ### 1. `Person`
 
-`Person` merupakan parent class yang digunakan sebagai dasar untuk class `Customer`.
+`Person` adalah parent class untuk `Customer`.
 
-| Attribute | Type     | Description   |
-| --------- | -------- | ------------- |
-| `__name`  | `String` | Nama person   |
-| `phone`   | `String` | Nomor telepon |
+| Attribute | Type | Keterangan |
+|---|---|---|
+| `__name` | String | Nama person |
+| `phone` | String | Nomor telepon |
 
-### Method
+Method utama:
 
 ```python
 def show_person_info(self):
+    ...
 ```
 
-Method ini digunakan untuk menampilkan informasi dasar person.
-
-### Property
-
-```python
-@property
-def name(self):
-    return self.__name
-```
-
-Property digunakan sebagai getter untuk private attribute `__name`.
-
----
+Property `name` digunakan sebagai getter untuk private attribute `__name`.
 
 ### 2. `Customer`
 
-`Customer` merupakan class yang digunakan untuk menyimpan data pelanggan.
+`Customer` digunakan untuk menyimpan data pelanggan dan merupakan child class dari `Person`.
 
-Class ini merupakan child class dari `Person`.
+| Attribute | Type | Keterangan |
+|---|---|---|
+| `id_customer` | String | ID unik customer |
+| `name` | String | Nama customer |
+| `phone` | String | Nomor telepon |
+| `address` | String | Alamat customer |
+| `__status` | String | Status customer |
 
-```python
-class Customer(Person):
-```
+Class attribute yang digunakan antara lain `total_customers`, `customer_type`, dan `application_name`.
 
-| Attribute     | Type     | Description            |
-| ------------- | -------- | ---------------------- |
-| `id_customer` | `String` | ID unik customer       |
-| `name`        | `String` | Nama customer          |
-| `phone`       | `String` | Nomor telepon customer |
-| `address`     | `String` | Alamat customer        |
-| `__status`    | `String` | Status customer        |
+Method penting:
 
-### Class Attributes
-
-```python
-total_customers
-customer_type
-application_name
-```
-
-### Method penting
-
-```python
-show_info()
-change_address()
-```
-
-`show_info()` digunakan untuk menampilkan data customer.
-
-`change_address()` digunakan untuk mengubah address customer dengan validasi agar address tidak boleh kosong.
-
-### Class Method
-
-```python
-@classmethod
-def change_customer_type(cls, new_type):
-```
-
-Method ini digunakan untuk mengubah `customer_type`.
-
-### Static Method
-
-```python
-@staticmethod
-def validate_phone(phone):
-```
-
-Method ini digunakan untuk melakukan validasi nomor telepon.
-
----
+- `show_info()` untuk menampilkan data customer.
+- `change_address()` untuk mengubah alamat dengan validasi.
+- `change_status()` untuk mengubah status customer.
+- `change_customer_type()` sebagai class method.
+- `validate_phone()` sebagai static method.
 
 ### 3. `Product`
 
 `Product` digunakan untuk menyimpan data perangkat dan aksesori komputer.
 
-| Attribute    | Type     | Description          |
-| ------------ | -------- | -------------------- |
-| `id_product` | `String` | ID unik product      |
-| `name`       | `String` | Nama product         |
-| `price`      | `int`    | Harga product        |
-| `category`   | `String` | Kategori product     |
-| `__stock`    | `int`    | Jumlah stock product |
+| Attribute | Type | Keterangan |
+|---|---|---|
+| `id_product` | String | ID unik produk |
+| `name` | String | Nama produk |
+| `price` | int | Harga produk |
+| `category` | String | Kategori produk |
+| `__stock` | int | Jumlah stok |
 
-### Class Attributes
+Class attribute yang digunakan adalah `store_name`, `store_category`, dan `total_products`.
 
-```python
-store_name
-store_category
-total_products
-```
+Method penting:
 
-### Method penting
-
-```python
-show_info()
-add_stock()
-reduce_stock()
-```
-
-`add_stock()` digunakan untuk menambahkan stock.
-
-`reduce_stock()` digunakan untuk mengurangi stock ketika terjadi transaksi.
-
-### Class Method
-
-```python
-@classmethod
-def change_store_name(cls, new_name):
-```
-
-Method ini digunakan untuk mengubah nama store.
-
-### Static Method
-
-```python
-@staticmethod
-def validate_price(price):
-```
-
-Digunakan untuk melakukan validasi harga.
-
-Method lainnya:
-
-```python
-@staticmethod
-def format_price(price):
-```
-
-Digunakan untuk mengubah format angka menjadi format Rupiah.
-
-### Getter dan Setter
-
-Private attribute `__stock` diakses menggunakan property:
-
-```python
-@property
-def stock(self):
-    return self.__stock
-```
-
-Setter:
-
-```python
-@stock.setter
-def stock(self, new_stock):
-    if new_stock < 0:
-        raise ValueError(
-            "Stock cannot be negative!"
-        )
-    else:
-        self.__stock = new_stock
-```
-
----
+- `show_info()` untuk menampilkan data produk.
+- `add_stock()` untuk menambah stok.
+- `reduce_stock()` untuk mengurangi stok.
+- `change_store_name()` sebagai class method.
+- `validate_price()` dan `format_price()` sebagai static method.
+- Property `stock` sebagai getter dan setter.
 
 ### 4. `Sale`
 
-`Sale` merupakan class yang digunakan untuk mengelola transaksi penjualan.
+`Sale` digunakan untuk mengelola transaksi penjualan.
 
-| Attribute  | Type       | Description           |
-| ---------- | ---------- | --------------------- |
-| `id_sale`  | `String`   | ID transaksi          |
-| `customer` | `Customer` | Object customer       |
-| `product`  | `Product`  | Object product        |
-| `quantity` | `int`      | Jumlah product        |
-| `__total`  | `int`      | Total biaya transaksi |
+| Attribute | Type | Keterangan |
+|---|---|---|
+| `id_sale` | String | ID transaksi |
+| `customer` | Customer | Object customer |
+| `product` | Product | Object product |
+| `quantity` | int | Jumlah produk |
+| `__total` | int | Total transaksi |
 
-### Class Attributes
+Method penting:
 
-```python
-total_sales
-tax
-currency
-```
-
-### Method penting
-
-```python
-calculate_total()
-process_sale()
-show_receipt()
-```
-
-`calculate_total()` digunakan untuk menghitung total transaksi berdasarkan:
-
-```text
-product price × quantity
-```
-
-Contoh:
-
-```python
-def calculate_total(self):
-    self.__total = (
-        self.product.price * self.quantity
-    )
-```
-
-`process_sale()` digunakan untuk memproses transaksi dan mengurangi stock product.
-
-`show_receipt()` digunakan untuk menampilkan sales receipt.
-
-### Class Method
-
-```python
-@classmethod
-def change_tax(cls, new_tax):
-```
-
-Digunakan untuk mengubah nilai tax.
-
-### Static Method
-
-```python
-@staticmethod
-def calculate_discount(total, percentage):
-```
-
-Digunakan untuk menghitung discount berdasarkan persentase tertentu.
+- `calculate_total()` menghitung harga produk dikalikan jumlah pembelian.
+- `process_sale()` memproses transaksi dan mengurangi stok.
+- `show_receipt()` menampilkan struk transaksi.
+- `change_tax()` sebagai class method.
+- `calculate_discount()` sebagai static method.
 
 ---
 
 ## Fitur Aplikasi
 
-| No | Feature                 | Description                      |
-| -- | ----------------------- | -------------------------------- |
-| 1  | **Product Management**  | Mengelola data dan stock product |
-| 2  | **Show Products**       | Menampilkan daftar product       |
-| 3  | **Add Stock**           | Menambahkan jumlah stock         |
-| 4  | **Reduce Stock**        | Mengurangi jumlah stock          |
-| 5  | **Customer Management** | Mengelola data customer          |
-| 6  | **Change Address**      | Mengubah address customer        |
-| 7  | **Change Status**       | Mengubah status customer         |
-| 8  | **Sales Management**    | Mengelola transaksi penjualan    |
-| 9  | **Create Sale**         | Membuat transaksi baru           |
-| 10 | **Show Sales**          | Menampilkan data transaksi       |
-| 11 | **Sales Receipt**       | Menampilkan receipt transaksi    |
-| 12 | **OOP Testing**         | Menguji konsep OOP               |
-| 13 | **Exit**                | Mengakhiri program               |
+| No | Fitur | Keterangan |
+|---:|---|---|
+| 1 | Product Management | Mengelola data dan stok produk |
+| 2 | Show Products | Menampilkan daftar produk |
+| 3 | Add Stock | Menambahkan stok produk |
+| 4 | Reduce Stock | Mengurangi stok produk |
+| 5 | Customer Management | Mengelola data customer |
+| 6 | Change Address | Mengubah alamat customer |
+| 7 | Change Status | Mengubah status customer |
+| 8 | Sales Management | Mengelola transaksi penjualan |
+| 9 | Create Sale | Membuat transaksi baru |
+| 10 | Show Sales | Menampilkan transaksi |
+| 11 | Sales Receipt | Menampilkan struk transaksi |
+| 12 | OOP Testing | Menguji konsep OOP |
+| 13 | Exit | Mengakhiri program |
 
 ---
 
@@ -441,7 +274,6 @@ Digunakan untuk menghitung discount berdasarkan persentase tertentu.
 [Main Menu]
     |
     ├── [1] Product Management
-    │       |
     │       ├── Show Products
     │       ├── Add Stock
     │       ├── Reduce Stock
@@ -449,7 +281,6 @@ Digunakan untuk menghitung discount berdasarkan persentase tertentu.
     │       └── Back
     │
     ├── [2] Customer Management
-    │       |
     │       ├── Show Customers
     │       ├── Change Address
     │       ├── Change Status
@@ -457,14 +288,12 @@ Digunakan untuk menghitung discount berdasarkan persentase tertentu.
     │       └── Back
     │
     ├── [3] Sales Management
-    │       |
     │       ├── Create Sale
     │       ├── Show Sales
     │       ├── Change Tax
     │       └── Back
     │
     ├── [4] OOP Testing
-    │       |
     │       ├── Test Objects
     │       ├── Test Instance Method
     │       ├── Test Class Method
@@ -482,36 +311,31 @@ Digunakan untuk menghitung discount berdasarkan persentase tertentu.
 
 ### Prasyarat
 
-Sebelum menjalankan program, pastikan:
+- Python 3 telah terinstal.
+- `pip` tersedia.
+- Terminal atau Command Prompt dapat digunakan.
 
-* **Python 3** sudah terinstal.
-* `pip` sudah tersedia.
-* Terminal atau Command Prompt dapat digunakan.
-* Library `tabulate` sudah diinstal.
-
-Untuk mengecek versi Python:
+Cek versi Python:
 
 ```bash
 python --version
 ```
 
-### Install Library
+### Instalasi Library
 
-Masuk ke folder project kemudian jalankan:
+Masuk ke folder `posttest1`, kemudian jalankan:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Atau install langsung:
+Atau:
 
 ```bash
 pip install tabulate
 ```
 
 ### Menjalankan Program
-
-Jalankan file utama:
 
 ```bash
 python main.py
@@ -521,15 +345,7 @@ python main.py
 
 ## Pengujian OOP
 
-Program menyediakan menu khusus untuk menguji requirement OOP.
-
-Pilih:
-
-```text
-4. OOP Testing
-```
-
-Kemudian akan muncul:
+Pilih menu **4. OOP Testing** pada Main Menu.
 
 ```text
 ==========================================
@@ -546,114 +362,294 @@ Kemudian akan muncul:
 ==========================================
 ```
 
+Screenshot menu pengujian:
+
+![OOP Testing Menu](assets/menu_test.png)
+
 ### 1. Test Objects
 
-Digunakan untuk menunjukkan object yang telah dibuat.
+Menguji object yang telah dibuat dan menampilkan jumlah object dari setiap class.
 
-Program memiliki minimal dua object untuk setiap main class:
-
-```python
-product1
-product2
-
-customer1
-customer2
-
-sale1
-sale2
-```
+![Object Test](assets/object_test.png)
 
 ### 2. Test Instance Method
 
-Digunakan untuk menguji method yang menggunakan `self`.
+Menguji method yang menggunakan parameter `self`, seperti `show_info()` dan `show_receipt()`.
 
-Contoh:
-
-```python
-product.show_info()
-customer.show_info()
-sale.show_receipt()
-```
+![Instance Method Test](assets/instance_test.png)
 
 ### 3. Test Class Method
 
-Digunakan untuk menguji method yang menggunakan `cls`.
+Menguji method dengan decorator `@classmethod`, seperti perubahan nama store, tipe customer, dan tax.
 
-Contoh:
-
-```python
-Product.change_store_name()
-Customer.change_customer_type()
-Sale.change_tax()
-```
+![Class Method Test](assets/class_method_test.png)
 
 ### 4. Test Static Method
 
-Digunakan untuk menguji method yang tidak menggunakan `self` maupun `cls`.
+Menguji method dengan decorator `@staticmethod`, seperti validasi harga, validasi nomor telepon, format harga, dan perhitungan diskon.
 
-Contoh:
-
-```python
-Product.validate_price()
-Product.format_price()
-Customer.validate_phone()
-Sale.calculate_discount()
-```
+![Static Method Test](assets/static_method_test.png)
 
 ### 5. Test Getter and Setter
 
-Digunakan untuk menguji getter dan setter pada private attribute.
+Menguji getter dan setter pada private attribute `__stock`. Nilai negatif ditolak menggunakan `ValueError`.
 
-Contoh valid:
-
-```python
-product.stock = 20
-```
-
-Contoh invalid:
-
-```python
-product.stock = -10
-```
-
-Nilai negatif akan ditolak oleh setter.
+![Getter and Setter Test](assets/getterandsetter_test.png)
 
 ### 6. Test Inheritance
 
-Digunakan untuk menunjukkan hubungan inheritance:
+Menguji pewarisan antara `Person` dan `Customer`, termasuk pemanggilan method `show_person_info()` dari parent class.
 
-```text
-Person
-   │
-   └── Customer
-```
-
-Contoh:
-
-```python
-customer.show_person_info()
-```
-
-Method tersebut berasal dari parent class `Person`.
+![Inheritance Test](assets/inheritance_test.png)
 
 ### 7. Run All Tests
 
-Menu ini menjalankan seluruh pengujian OOP sekaligus, meliputi:
+Menjalankan seluruh pengujian OOP dalam satu eksekusi.
 
-* Object
-* Instance Method
-* Class Method
-* Static Method
-* Getter
-* Setter
-* Invalid Setter
-* Inheritance
+![Run All Tests](assets/all_test.png)
+
+---
+
+## Implementasi Kode Pengujian
+
+Kode menu pengujian berada di `menus/testing_menu.py`.
+
+### Struktur Menu Testing
+
+```python
+from utils import clear_screen, pause
+
+
+def testing_menu(products, customers, sales, Product, Customer, Sale):
+    """Menu untuk menguji konsep OOP."""
+    while True:
+        clear_screen()
+        print("==========================================")
+        print("               OOP TESTING")
+        print("==========================================")
+        print("1. Test Objects")
+        print("2. Test Instance Method")
+        print("3. Test Class Method")
+        print("4. Test Static Method")
+        print("5. Test Getter and Setter")
+        print("6. Test Inheritance")
+        print("7. Run All Tests")
+        print("8. Back")
+        print("==========================================")
+
+        choice = input("Choose menu: ")
+
+        if choice == "1":
+            test_objects(products, customers, sales)
+        elif choice == "2":
+            test_instance_method(products, customers, sales)
+        elif choice == "3":
+            test_class_method(Product, Customer, Sale)
+        elif choice == "4":
+            test_static_method(Product, Customer, Sale)
+        elif choice == "5":
+            test_getter_setter(products)
+        elif choice == "6":
+            test_inheritance(customers)
+        elif choice == "7":
+            run_all_tests(products, customers, sales, Product, Customer, Sale)
+        elif choice == "8":
+            break
+        else:
+            print("Invalid choice!")
+            pause()
+```
+
+### Test Objects
+
+```python
+def test_objects(products, customers, sales):
+    """Menampilkan object yang telah dibuat."""
+    clear_screen()
+    print("========== OBJECT TEST ==========")
+    print(f"Product objects  : {len(products)}")
+    print(f"Customer objects : {len(customers)}")
+    print(f"Sale objects     : {len(sales)}")
+
+    print("\\nProduct Objects:")
+    for product in products:
+        print(f"- {product.id_product} | {product.name}")
+
+    print("\\nCustomer Objects:")
+    for customer in customers:
+        print(f"- {customer.id_customer} | {customer.name}")
+
+    print("\\nSale Objects:")
+    for sale in sales:
+        print(f"- {sale.id_sale} | {sale.product.name}")
+
+    pause()
+```
+
+Pengujian ini membuktikan bahwa object dari `Product`, `Customer`, dan `Sale` berhasil dibuat.
+
+### Test Instance Method
+
+```python
+def test_instance_method(products, customers, sales):
+    """Menguji instance method."""
+    clear_screen()
+    print("========== INSTANCE METHOD ==========")
+
+    print("\\nProduct.show_info()")
+    products[0].show_info()
+
+    print("\\nCustomer.show_info()")
+    customers[0].show_info()
+
+    print("\\nSale.show_receipt()")
+    sales[0].show_receipt()
+
+    pause()
+```
+
+Method dipanggil melalui object dan dapat mengakses attribute instance menggunakan `self`.
+
+### Test Class Method
+
+```python
+def test_class_method(Product, Customer, Sale):
+    """Menguji class method."""
+    clear_screen()
+    print("========== CLASS METHOD ==========")
+
+    print(f"Old Store Name : {Product.store_name}")
+    Product.change_store_name("Alfauzi Computer Store")
+    print(f"New Store Name : {Product.store_name}")
+
+    print(f"\\nOld Customer Type : {Customer.customer_type}")
+    Customer.change_customer_type("Premium")
+    print(f"New Customer Type : {Customer.customer_type}")
+
+    print(f"\\nOld Tax : {Sale.tax}%")
+    Sale.change_tax(10)
+    print(f"New Tax : {Sale.tax}%")
+
+    pause()
+```
+
+Class method menggunakan `@classmethod`, menerima parameter `cls`, dan dapat mengubah class attribute.
+
+### Test Static Method
+
+```python
+def test_static_method(Product, Customer, Sale):
+    """Menguji static method."""
+    clear_screen()
+    print("========== STATIC METHOD ==========")
+    print("Validate Price  :", Product.validate_price(500000))
+    print("Validate Phone  :", Customer.validate_phone("081234567890"))
+    print("Format Price    :", Product.format_price(750000))
+    print("Discount Result :", Sale.calculate_discount(750000, 10))
+    pause()
+```
+
+Static method tidak menggunakan `self` maupun `cls` dan dapat dipanggil melalui nama class.
+
+### Test Getter dan Setter
+
+```python
+def test_getter_setter(products):
+    """Menguji getter dan setter."""
+    clear_screen()
+    print("========== GETTER AND SETTER ==========")
+
+    product = products[0]
+    print(f"Current Stock : {product.stock}")
+
+    print("\\nTesting valid setter...")
+    try:
+        product.stock = 20
+        print(f"New Stock     : {product.stock}")
+    except ValueError as error:
+        print(error)
+
+    print("\\nTesting invalid setter...")
+    try:
+        product.stock = -10
+    except ValueError as error:
+        print(f"Error : {error}")
+
+    pause()
+```
+
+Pengujian ini membuktikan penggunaan `@property`, setter, encapsulation, serta validasi data.
+
+### Test Inheritance
+
+```python
+def test_inheritance(customers):
+    """Menguji inheritance."""
+    clear_screen()
+    print("========== INHERITANCE ==========")
+
+    customer = customers[0]
+    print("Parent Class  : Person")
+    print("Child Class   : Customer")
+    print("\\nCalling method from Person:")
+    customer.show_person_info()
+
+    pause()
+```
+
+Method `show_person_info()` berasal dari class `Person` dan dapat digunakan oleh object `Customer` karena inheritance.
+
+### Run All Tests
+
+```python
+def run_all_tests(products, customers, sales, Product, Customer, Sale):
+    """Menjalankan seluruh pengujian OOP."""
+    clear_screen()
+    print("==========================================")
+    print("             RUN ALL OOP TESTS")
+    print("==========================================")
+
+    print("\\n1. Object Test")
+    print(f"Product objects  : {len(products)}")
+    print(f"Customer objects : {len(customers)}")
+    print(f"Sale objects     : {len(sales)}")
+
+    print("\\n2. Instance Method")
+    products[0].show_info()
+
+    print("\\n3. Class Method")
+    print(f"Store Name : {Product.store_name}")
+
+    print("\\n4. Static Method")
+    print(f"Valid Price : {Product.validate_price(500000)}")
+
+    print("\\n5. Getter")
+    print(f"Current Stock : {products[0].stock}")
+
+    print("\\n6. Valid Setter")
+    products[0].stock = 25
+    print(f"New Stock : {products[0].stock}")
+
+    print("\\n7. Invalid Setter")
+    try:
+        products[0].stock = -5
+    except ValueError as error:
+        print(f"Error : {error}")
+
+    print("\\n8. Inheritance")
+    customers[0].show_person_info()
+
+    print("\\nAll OOP tests completed!")
+    pause()
+```
 
 ---
 
 ## Contoh Penggunaan
 
 ### Main Menu
+
+![Main Menu](assets/main_menu.png)
 
 ```text
 ==============================================
@@ -686,31 +682,16 @@ Choose menu:
 Choose menu: 1
 ```
 
-Output:
+Contoh output:
 
 ```text
 ID Product  Name                  Price       Stock  Category
----------------------------------------------------------------
+----------------------------------------------------------------
 P001        Mechanical Keyboard   Rp750,000   10     Keyboard
 P002        Gaming Mouse          Rp350,000   15     Mouse
 ```
 
 ### Customer Management
-
-```text
-==========================================
-         CUSTOMER MANAGEMENT
-==========================================
-1. Show Customers
-2. Change Address
-3. Change Status
-4. Change Customer Type
-5. Back
-==========================================
-Choose menu: 1
-```
-
-Output:
 
 ```text
 ID Customer  Name   Phone          Address      Status
@@ -722,20 +703,6 @@ C002         Budi   082345678901   Balikpapan   Active
 ### Sales Management
 
 ```text
-==========================================
-           SALES MANAGEMENT
-==========================================
-1. Create Sale
-2. Show Sales
-3. Change Tax
-4. Back
-==========================================
-Choose menu: 1
-```
-
-Contoh transaksi:
-
-```text
 Customer ID : C001
 Product ID  : P001
 Quantity    : 1
@@ -743,7 +710,7 @@ Quantity    : 1
 Sale processed successfully!
 ```
 
-Sales receipt:
+Contoh sales receipt:
 
 ```text
 ==========================================
@@ -760,37 +727,8 @@ Total       : Rp750,000
 
 ---
 
-## Contoh Screenshot Output
-
-Screenshot hasil program dapat ditempatkan pada folder `assets`.
-
-Contoh struktur:
-
-```text
-computer_sales_management/
-│
-├── assets/
-│   ├── main_menu.png
-│   ├── product_menu.png
-│   ├── customer_menu.png
-│   ├── sales_menu.png
-│   └── oop_testing.png
-│
-└── README.md
-```
-
-Kemudian ditampilkan di README menggunakan:
-
-```html
-<img src="assets/main_menu.png" alt="Main Menu" width="500"/>
-```
-
----
-
 ## Kesimpulan
 
-**Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer** merupakan program berbasis Python yang menerapkan konsep Object-Oriented Programming untuk mengelola product, customer, dan sales transaction.
+**Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer** merupakan aplikasi Python berbasis CLI yang menerapkan konsep OOP untuk mengelola produk, customer, stok, dan transaksi penjualan.
 
-Program telah menerapkan **Class & Object, Attributes, Methods, Encapsulation, Getter & Setter, Validation, Inheritance, serta Modularization**.
-
-Program juga dilengkapi dengan **OOP Testing Menu** untuk mendemonstrasikan setiap konsep OOP yang digunakan dalam project.
+Program ini telah menerapkan **class dan object, attribute, method, encapsulation, getter dan setter, validation, inheritance, class method, static method, serta modularization**. Selain itu, tersedia **OOP Testing Menu** yang menampilkan bukti implementasi dan pengujian setiap konsep tersebut.
