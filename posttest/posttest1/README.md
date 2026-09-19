@@ -647,83 +647,9 @@ def run_all_tests(products, customers, sales, Product, Customer, Sale):
 
 ## Contoh Penggunaan
 
-### Main Menu
-
 ![Main Menu](assets/main_menu.png)
-
-```text
-==============================================
-       COMPUTER SALES MANAGEMENT SYSTEM
-==============================================
-Store : Alfauzi Computer
-Devices and Accessories
-==============================================
-1. Product Management
-2. Customer Management
-3. Sales Management
-4. OOP Testing
-5. Exit
-==============================================
-Choose menu:
-```
-
-### Product Management
-
-```text
-==========================================
-          PRODUCT MANAGEMENT
-==========================================
-1. Show Products
-2. Add Stock
-3. Reduce Stock
-4. Change Store Name
-5. Back
-==========================================
-Choose menu: 1
-```
-
-Contoh output:
-
-```text
-ID Product  Name                  Price       Stock  Category
-----------------------------------------------------------------
-P001        Mechanical Keyboard   Rp750,000   10     Keyboard
-P002        Gaming Mouse          Rp350,000   15     Mouse
-```
-
-### Customer Management
-
-```text
-ID Customer  Name   Phone          Address      Status
----------------------------------------------------------
-C001         Andi   081234567890   Samarinda    Active
-C002         Budi   082345678901   Balikpapan   Active
-```
-
-### Sales Management
-
-```text
-Customer ID : C001
-Product ID  : P001
-Quantity    : 1
-
-Sale processed successfully!
-```
-
-Contoh sales receipt:
-
-```text
-==========================================
-              SALES RECEIPT
-==========================================
-Sale ID     : S003
-Customer    : Andi
-Product     : Mechanical Keyboard
-Price       : Rp750,000
-Quantity    : 1
-Total       : Rp750,000
-==========================================
-```
+![Main Menu](assets/sale_menu.png)
+![Main Menu](assets/create_sale.png)
 
 ---
 

@@ -1,14 +1,7 @@
 from utils import clear_screen, pause
 
 
-def testing_menu(
-    products,
-    customers,
-    sales,
-    Product,
-    Customer,
-    Sale
-):
+def testing_menu(products, customers, sales, Product, Customer, Sale):
     while True:
         clear_screen()
 
@@ -36,28 +29,16 @@ def testing_menu(
             print(f"Sale objects     : {len(sales)}")
 
             print("\nProduct Objects:")
-
             for product in products:
-                print(
-                    f"- {product.id_product} | "
-                    f"{product.name}"
-                )
+                print(f"- {product.id_product} | {product.name}")
 
             print("\nCustomer Objects:")
-
             for customer in customers:
-                print(
-                    f"- {customer.id_customer} | "
-                    f"{customer.name}"
-                )
+                print(f"- {customer.id_customer} | {customer.name}")
 
             print("\nSale Objects:")
-
             for sale in sales:
-                print(
-                    f"- {sale.id_sale} | "
-                    f"{sale.product.name}"
-                )
+                print(f"- {sale.id_sale} | {sale.product.name}")
 
             pause()
 
@@ -105,25 +86,10 @@ def testing_menu(
 
             print("========== STATIC METHOD ==========")
 
-            print(
-                "Validate Price  :",
-                Product.validate_price(500000)
-            )
-
-            print(
-                "Validate Phone  :",
-                Customer.validate_phone("081234567890")
-            )
-
-            print(
-                "Format Price    :",
-                Product.format_price(750000)
-            )
-
-            print(
-                "Discount Result :",
-                Sale.calculate_discount(750000, 10)
-            )
+            print(f"Validate Price  : {Product.validate_price(500000)}")
+            print(f"Validate Phone  : {Customer.validate_phone('081234567890')}")
+            print(f"Format Price    : {Product.format_price(750000)}")
+            print(f"Discount Result : {Sale.calculate_discount(750000, 10)}")
 
             pause()
 
@@ -137,19 +103,15 @@ def testing_menu(
             print(f"Current Stock : {product.stock}")
 
             print("\nTesting valid setter...")
-
             try:
                 product.stock = 20
                 print(f"New Stock     : {product.stock}")
-
             except ValueError as error:
                 print(error)
 
             print("\nTesting invalid setter...")
-
             try:
                 product.stock = -10
-
             except ValueError as error:
                 print(f"Error : {error}")
 
@@ -166,7 +128,6 @@ def testing_menu(
             print("Child Class   : Customer")
 
             print("\nCalling method from Person:")
-
             customer.show_person_info()
 
             pause()
@@ -190,30 +151,21 @@ def testing_menu(
             print(f"Store Name : {Product.store_name}")
 
             print("\n4. Static Method")
-            print(
-                f"Valid Price : "
-                f"{Product.validate_price(500000)}"
-            )
+            print(f"Valid Price : {Product.validate_price(500000)}")
 
             print("\n5. Getter")
             print(f"Current Stock : {products[0].stock}")
 
             print("\n6. Valid Setter")
-
             try:
                 products[0].stock = 25
-                print(
-                    f"New Stock : {products[0].stock}"
-                )
-
+                print(f"New Stock : {products[0].stock}")
             except ValueError as error:
                 print(error)
 
             print("\n7. Invalid Setter")
-
             try:
                 products[0].stock = -5
-
             except ValueError as error:
                 print(f"Error : {error}")
 
@@ -221,7 +173,6 @@ def testing_menu(
             customers[0].show_person_info()
 
             print("\nAll OOP tests completed!")
-
             pause()
 
         elif choice == "8":
