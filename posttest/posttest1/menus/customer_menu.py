@@ -29,7 +29,8 @@ def customer_menu(customers):
                     customer.name,
                     customer.phone,
                     customer.address,
-                    customer.status
+                    customer.status,
+                    customer.customer_type
                 ])
 
             print(tabulate(
@@ -39,7 +40,8 @@ def customer_menu(customers):
                     "Name",
                     "Phone",
                     "Address",
-                    "Status"
+                    "Status",
+                    "Type"
                 ],
                 tablefmt="grid"
             ))
@@ -107,27 +109,41 @@ def customer_menu(customers):
         elif choice == "4":
             clear_screen()
 
-            print("1. Regular")
-            print("2. Premium")
-            print("3. VIP")
-
-            type_choice = input("Choose customer type: ")
+            for i, customer in enumerate(customers, start=1):
+                print(f"{i}. {customer.name}")
 
             try:
-                if type_choice == "1":
-                    customers[0].change_customer_type("Regular")
+                number = int(input("Choose customer: "))
 
-                elif type_choice == "2":
-                    customers[0].change_customer_type("Premium")
+                if 1 <= number <= len(customers):
+                    print("\n1. Regular")
+                    print("2. Premium")
+                    print("3. VIP")
 
-                elif type_choice == "3":
-                    customers[0].change_customer_type("VIP")
+                    type_choice = input("Choose type: ")
+
+                    try:
+                        if type_choice == "1":
+                            new_type = "Regular"
+                        elif type_choice == "2":
+                            new_type = "Premium"
+                        elif type_choice == "3":
+                            new_type = "VIP"
+                        else:
+                            print("Invalid choice!")
+                            pause()
+                            continue
+
+                        customers[number - 1].change_type(new_type)
+
+                    except ValueError as error:
+                        print(error)
 
                 else:
-                    print("Invalid choice!")
+                    print("Customer not found!")
 
-            except ValueError as error:
-                print(error)
+            except ValueError:
+                print("Input must be a number!")
 
             pause()
 

@@ -69,9 +69,9 @@ def testing_menu(products, customers, sales, Product, Customer, Sale):
 
             print()
 
-            print(f"Old Customer Type : {Customer.customer_type}")
-            Customer.change_customer_type("Premium")
-            print(f"New Customer Type : {Customer.customer_type}")
+            print(f"Old Store Branch : {Customer.store_branch}")
+            Customer.change_store_branch("Balikpapan")
+            print(f"New Store Branch : {Customer.store_branch}")
 
             print()
 
