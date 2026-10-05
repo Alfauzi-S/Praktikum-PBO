@@ -20,13 +20,13 @@ class Customer(Person):
 
     def show_person_info(self):
         super().show_person_info()
-        print(f"ID Customer    : {self.id_customer}")
-        print(f"Address        : {self.address}")
-        print(f"Phone          : {self.phone}")
-        print(f"Gmail          : {self.gmail}")
-        print(f"Membership     : {self.membership_tier}")
-        print(f"Loyalty Points : {self.loyalty_points}")
-        print(f"Total Spending : Rp{self.__total_spending:,}")
+        print(f"ID Customer           : {self.id_customer}")
+        print(f"Address               : {self.address}")
+        print(f"Phone                 : {self.phone}")
+        print(f"Gmail                 : {self.gmail}")
+        print(f"Membership            : {self.membership_tier}")
+        print(f"Loyalty Points        : {self.loyalty_points}")
+        print(f"Total Spending        : Rp{self.__total_spending:,}")
 
     @property
     def address(self):
