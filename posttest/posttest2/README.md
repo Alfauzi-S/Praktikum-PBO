@@ -23,7 +23,7 @@
 
 ## Deskripsi Proyek
 
-Aplikasi berbasis Command Line Interface (CLI) untuk mensimulasikan sistem kasir dan manajemen toko komputer. Fitur utamanya: login/register dengan peran **Staff** dan **Customer**, manajemen produk dan stok, transaksi penjualan dengan diskon (berdasarkan tier membership) dan pajak, poin loyalitas, bonus karyawan, serta menu **OOP Testing** untuk membuktikan setiap konsep yang diminta soal.
+Aplikasi berbasis Command Line Interface (CLI) untuk mensimulasikan sistem kasir dan manajemen toko komputer. Fitur utamanya: login/register dengan peran **Staff** dan **Customer**, manajemen produk, penjualan, dan laporan transaksi. Program mendemonstrasikan konsep OOP: inheritance (superclass Person), encapsulation (private/protected), serta relasi UML (asosiasi, agregasi, dan komposisi).
 
 ---
 
@@ -64,80 +64,111 @@ posttest2/
 
 ```mermaid
 classDiagram
+    direction TB
+    
     class Person {
-        #_name
-        #_phone
-        -__password
-        -__gmail
-        +username
-        +birth_date
-        +gender
-        +show_person_info()
-        +change_phone()
-        +change_gmail()
-        +change_password()
+        #_name: str
+        #_phone: str
+        -__password: str
+        -__gmail: str
+        +username: str
+        +birth_date: str
+        +gender: str
+        +show_person_info()*
+        +change_phone(new_phone)
+        +change_gmail(new_gmail)
+        +change_password(new_password)
     }
+    
     class Customer {
-        +id_customer
-        +membership_tier
-        +loyalty_points
-        #_address
-        -__total_spending
-        +show_person_info()
-        +add_spending()
-        +add_points()
-        +redeem_points()
+        +id_customer: str
+        +membership_tier: str
+        +loyalty_points: int
+        #_address: str
+        -__total_spending: float
+        +show_person_info()*
+        +add_spending(amount)
+        +add_points(points)
+        +redeem_points(points)
     }
+    
     class Staff {
-        +employee_id
-        #_role
-        -__salary
-        -__total_bonus
-        +total_sales_processed
-        +show_person_info()
+        +employee_id: str
+        +total_sales_processed: int
+        #_role: str
+        -__salary: float
+        -__total_bonus: float
+        +show_person_info()*
         +process_transaction(sale)
         +claim_bonus()
     }
+    
     class Store {
-        +name
-        +location
-        #_products
-        #_staffs
-        +add_product()
-        +add_staff()
+        +name: str
+        +location: str
+        #_products: list
+        #_staffs: list
+        +add_product(product)
+        +add_staff(staff)
+        +remove_product(id)
+        +remove_staff(id)
     }
+    
     class Product {
-        +id_product
-        +name
-        +category
-        #_price
-        #_stock
-        +reduce_stock()
+        +id_product: str
+        +name: str
+        +category: str
+        #_price: float
+        #_stock: int
+        +reduce_stock(quantity)
+        +get_info()
     }
+    
     class Sale {
-        +id_sale
-        +customer
-        #_items
-        +add_item()
+        +id_sale: str
+        +customer: Customer
+        +tax_rate: float
+        #_items: list
+        +add_item(product, quantity)
         +process_sale()
+        +get_total()
     }
+    
     class SaleItem {
-        +product
-        +quantity
-        +subtotal
+        +product: Product
+        +quantity: int
+        +subtotal: float
+        +get_info()
     }
 
-    Person <|-- Customer : Inheritance
-    Person <|-- Staff : Inheritance
-    Store o-- Product : Agregasi
-    Store o-- Staff : Agregasi
-    Sale *-- SaleItem : Komposisi
-    Sale --> Customer : Asosiasi
-    SaleItem --> Product : Asosiasi
-    Staff ..> Sale : Asosiasi (parameter)
+    %% Inheritance
+    Person <|-- Customer : inherits
+    Person <|-- Staff : inherits
+    
+    %% Aggregation (whole-part, part can exist independently)
+    Store o-- Product : contains
+    Store o-- Staff : manages
+    
+    %% Composition (whole-part, part cannot exist without whole)
+    Sale *-- SaleItem : contains
+    
+    %% Association (usage/dependency)
+    Sale --> Customer : references
+    SaleItem --> Product : references
+    Staff --> Sale : processes
 ```
 
-Keterangan notasi: `<|--` inheritance, `o--` agregasi, `*--` komposisi, `-->` dan `..>` asosiasi. Pada atribut: `+` public, `#` protected, `-` private.
+**Keterangan Notasi:**
+- `<|--` : Inheritance (Pewarisan)
+- `o--` : Aggregation (Agregasi) - bagian dapat hidup mandiri
+- `*--` : Composition (Komposisi) - bagian terikat pada keseluruhan
+- `-->` : Association (Asosiasi) - hubungan antar objek
+
+**Tingkat Akses:**
+- `+` : Public
+- `#` : Protected
+- `-` : Private
+- `*` : Abstract method
 
 ---
 
@@ -145,26 +176,40 @@ Keterangan notasi: `<|--` inheritance, `o--` agregasi, `*--` komposisi, `-->` da
 
 | Relasi | Implementasi | Penjelasan |
 |---|---|---|
-| **Asosiasi** | `Staff` → `Sale`, `Sale` → `Customer` | `Staff.process_transaction(sale)` menerima objek `Sale` sebagai parameter dan tidak menyimpannya sebagai atribut, sehingga hubungannya hanya sementara. `Sale` juga menyimpan referensi ke `Customer` yang melakukan pembelian. |
-| **Agregasi** | `Store` ◇— `Product` & `Staff` | Objek `Product` dan `Staff` dibuat **di luar** `Store`, lalu didaftarkan lewat `add_product()` / `add_staff()`. Jika `Store` dihapus, objek tersebut tetap ada (siklus hidup mandiri). |
-| **Komposisi** | `Sale` ◆— `SaleItem` | Objek `SaleItem` dibuat **di dalam** `Sale.add_item()`. `SaleItem` tidak berdiri sendiri dan ikut hilang bersama `Sale` (siklus hidup terikat). |
+| **Inheritance** | `Customer` extends `Person`, `Staff` extends `Person` | `Customer` dan `Staff` mewarisi atribut dan method dari `Person` (username, birth_date, gender, dll). Kedua class me-override method `show_person_info()` dengan menambahkan data spesifik mereka. |
+| **Asosiasi** | `Staff` → `Sale`, `Sale` → `Customer`, `SaleItem` → `Product` | `Staff.process_transaction(sale)` menerima objek `Sale` sebagai parameter tanpa menyimpannya sebagai atribut. Hubungan bersifat sesaat (temporary). |
+| **Agregasi** | `Store` o-- `Product` & `Staff` | Objek `Product` dan `Staff` dibuat **di luar** `Store`, kemudian didaftarkan lewat `add_product()` / `add_staff()`. Jika `Store` dihapus, objek tersebut tetap ada. |
+| **Komposisi** | `Sale` *-- `SaleItem` | Objek `SaleItem` dibuat **di dalam** method `Sale.add_item()`. `SaleItem` tidak berdiri sendiri dan ikut hilang bersama `Sale` dihapus (siklus hidup terikat). |
 
-Potongan kode:
+### Potongan Kode Relasi:
 
 ```python
-# Agregasi (main.py): objek dibuat di luar, lalu dimasukkan ke Store
+# ========== INHERITANCE ==========
+class Customer(Person):
+    def __init__(self, id_customer, name, username, password, phone, gmail, address, ...):
+        super().__init__(name, username, password, phone, gmail, birth_date, gender)
+        self.id_customer = id_customer
+        self._address = address
+        ...
+
+# ========== AGREGASI (main.py) ==========
+# Objek dibuat di luar, lalu dimasukkan ke Store
 my_store = Store("Alfauzi Computer Store", "Samarinda")
 prod1 = Product("P001", "Mechanical Keyboard", 750000, 10, "Peripheral")
 my_store.add_product(prod1)
 
-# Komposisi (models/sale.py): SaleItem dibuat di dalam Sale
-new_item = SaleItem(product, quantity)
-self._items.append(new_item)
+# ========== KOMPOSISI (models/sale.py) ==========
+# SaleItem dibuat dan hidup di dalam Sale
+def add_item(self, product, quantity):
+    new_item = SaleItem(product, quantity)  # Dibuat di sini
+    self._items.append(new_item)
 
-# Asosiasi (models/staff.py): Sale hanya diterima sebagai parameter
+# ========== ASOSIASI (models/staff.py) ==========
+# Sale hanya diterima sebagai parameter, tidak disimpan
 def process_transaction(self, sale):
     if sale.process_sale():
-        ...
+        self.total_sales_processed += 1
+        # Sale tidak menjadi atribut Staff
 ```
 
 ---
@@ -173,65 +218,72 @@ def process_transaction(self, sale):
 
 ### Superclass dan Subclass
 
-- **Superclass:** `Person`
-- **Subclass:** `Customer` dan `Staff`
+- **Superclass:** `Person` (Kelas induk yang umum)
+- **Subclass:** `Customer` dan `Staff` (Kelas turunan khusus)
 
 ### Pemanggilan `super().__init__()`
 
 ```python
 class Customer(Person):
-    def __init__(self, id_customer, name, username, password, phone, gmail, address, ...):
+    def __init__(self, id_customer, name, username, password, phone, gmail, address, birth_date, gender):
         super().__init__(name, username, password, phone, gmail, birth_date, gender)
         self.id_customer = id_customer
-        ...
+        self._address = address
+        self.membership_tier = "Bronze"
+        self.loyalty_points = 0
 
 class Staff(Person):
-    def __init__(self, name, username, password, employee_id, role, salary, phone, gmail, ...):
+    def __init__(self, name, username, password, employee_id, role, salary, phone, gmail, birth_date, gender):
         super().__init__(name, username, password, phone, gmail, birth_date, gender)
         self.employee_id = employee_id
-        ...
+        self._role = role
+        self.__salary = salary
+        self.__total_bonus = 0
+        self.total_sales_processed = 0
 ```
 
-### Atribut Tambahan (unik per subclass)
+### Atribut Tambahan (Unik per Subclass)
 
-| Kelas | Atribut spesifik |
-|---|---|
-| `Customer` | `id_customer`, `_address`, `membership_tier`, `loyalty_points`, `__total_spending` |
-| `Staff` | `employee_id`, `_role`, `__salary`, `__total_bonus`, `total_sales_processed`, `is_active` |
+| Kelas | Atribut Spesifik | Tipe |
+|---|---|---|
+| `Customer` | `id_customer`, `_address`, `membership_tier`, `loyalty_points`, `__total_spending` | str, str, str, int, float |
+| `Staff` | `employee_id`, `_role`, `__salary`, `__total_bonus`, `total_sales_processed` | str, str, float, float, int |
 
 ### Method Overriding
 
-Method `show_person_info()` milik `Person` di-override di `Customer` dan `Staff`. Keduanya memanggil versi parent dengan `super()`, lalu menambahkan data khas masing-masing.
+Method `show_person_info()` dari `Person` di-override di `Customer` dan `Staff`. Kedua subclass memanggil versi parent dengan `super()`, kemudian menambahkan data unik masing-masing.
 
 ```python
-# Person: hanya data umum
+# ========== PERSON (Superclass) ==========
 def show_person_info(self):
-    print(f"Name : {self._name}")
-    ...
+    print(f"Name       : {self._name}")
+    print(f"Username   : {self.username}")
+    print(f"Gmail      : {self.gmail}")
+    print(f"Gender     : {self.gender}")
 
-# Customer: data umum + data pelanggan
+# ========== CUSTOMER (Subclass) ==========
 def show_person_info(self):
-    super().show_person_info()
+    super().show_person_info()  # Panggil versi Parent
     print(f"ID Customer    : {self.id_customer}")
     print(f"Membership     : {self.membership_tier}")
-    ...
+    print(f"Loyalty Points : {self.loyalty_points}")
 
-# Staff: data umum + data karyawan
+# ========== STAFF (Subclass) ==========
 def show_person_info(self):
-    super().show_person_info()
+    super().show_person_info()  # Panggil versi Parent
     print(f"Employee ID    : {self.employee_id}")
     print(f"Role           : {self._role}")
-    ...
+    print(f"Total Sales    : {self.total_sales_processed}")
 ```
 
 ### Protected dan Private pada Pewarisan
 
-| Tingkat akses | Atribut di `Person` | Alasan |
+| Tingkat Akses | Atribut di `Person` | Alasan |
 |---|---|---|
-| **Protected** (`_nama`) | `_name`, `_phone` | Perlu diakses langsung oleh subclass, misalnya `Customer.add_points()` memakai `self._name` dan `Staff.deactivate()` memakai `self._name`. |
-| **Private** (`__nama`) | `__password`, `__gmail` | Data sensitif milik `Person`. Subclass hanya bisa mengaksesnya lewat property (`password`, `gmail`) atau method `change_password()` / `change_gmail()`. |
+| **Protected** (`_nama`) | `_name`, `_phone` | Perlu diakses langsung oleh subclass, misalnya `Customer.add_points()` memakai `self._name` dan `Staff.show_person_info()` memakai `self._name`. |
+| **Private** (`__nama`) | `__password`, `__gmail` | Data sensitif milik `Person`. Subclass hanya bisa mengaksesnya lewat property (`password`, `gmail`) atau method (`change_password()`, `change_gmail()`). Tidak ada akses langsung ke `__password` dari subclass. |
 
-Validasi `phone` dan `gmail` ditulis **satu kali** di `Person` dan diwarisi oleh kedua subclass, sehingga tidak ada kode duplikat.
+Validasi `phone` dan `gmail` ditulis **satu kali** di `Person` dan diwarisi oleh kedua subclass, sehingga menghindari duplikasi kode.
 
 ---
 
@@ -242,27 +294,27 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Akun default untuk pengujian:
+### Akun Default untuk Pengujian
 
-- Staff (Manager): `admin` / `admin123`
-- Customer: `rina_m` / `password1`
+- **Staff (Manager):** Username `admin` / Password `admin123`
+- **Customer:** Username `rina_m` / Password `password1`
 
 ---
 
 ## Skenario Pengujian OOP
 
-Pilih menu `3. OOP Testing` pada Main Menu:
+Pilih menu `3. OOP Testing` pada Main Menu untuk menjalankan pengujian fitur OOP:
 
-| Menu | Yang dibuktikan |
+| Menu | Yang Dibuktikan |
 |---|---|
-| 1. Test Inheritance | `show_person_info()` menampilkan data parent (Name, Username, Gmail) dan child (ID Customer, Membership). |
-| 2. Test Encapsulation | `product.stock = -10` ditolak dengan `ValueError`. |
-| 3. Test Class Method | `Sale.change_tax(15)` mengubah pajak untuk semua objek `Sale`. |
-| 4. Test Static Method | `Product.validate_price(-500)` mengembalikan `False` tanpa membuat objek. |
+| 1. Test Inheritance | `show_person_info()` menampilkan data parent (Name, Username, Gmail) dan child (ID Customer, Membership Tier). |
+| 2. Test Encapsulation | Setter `product.stock = -10` ditolak dengan `ValueError`. Atribut private terlindungi. |
+| 3. Test Class Method | `Sale.change_tax(15)` mengubah tax rate untuk **semua** objek `Sale`. |
+| 4. Test Static Method | `Product.validate_price(-500)` mengembalikan `False` tanpa membuat objek instance. |
 | 5. Test Association | `Staff` memproses `Sale` lewat parameter, dan `hasattr(staff, 'sale')` bernilai `False`. |
-| 6. Test Aggregation | `Store` dihapus dengan `del`, tetapi objek `Product` tetap ada. |
+| 6. Test Aggregation | `Store` dihapus dengan `del`, tetapi objek `Product` tetap ada di memori. |
 | 7. Test Composition | `SaleItem` dibuat di dalam `Sale.add_item()` dan terikat pada `Sale`. |
-| 8. Run All Tests | Menjalankan semua pengujian di atas. |
+| 8. Run All Tests | Menjalankan semua pengujian di atas secara berurutan. |
 
 ---
 
@@ -270,12 +322,22 @@ Pilih menu `3. OOP Testing` pada Main Menu:
 
 > Tambahkan screenshot hasil run di sini (simpan gambar di folder `assets/`), contoh:
 >
-> `![Main Menu](assets/main_menu.png)`
-> `![Test Inheritance](assets/test_inheritance.png)`
-> `![Test Agregasi dan Komposisi](assets/test_relasi.png)`
+> ```
+> ![Main Menu](assets/main_menu.png)
+> ![Test Inheritance](assets/test_inheritance.png)
+> ![Test Agregasi dan Komposisi](assets/test_relasi.png)
+> ```
 
 ---
 
 ## Kesimpulan
 
-Program ini menerapkan tiga relasi UML (asosiasi, agregasi, komposisi) dan konsep inheritance lengkap: satu superclass (`Person`), dua subclass (`Customer`, `Staff`), pemanggilan `super().__init__()`, atribut unik per subclass, method overriding (`show_person_info()`), serta pembagian akses protected dan private sesuai kebutuhan pewarisan.
+Program ini menerapkan tiga relasi UML (asosiasi, agregasi, komposisi) dan konsep inheritance lengkap:
+- **Satu superclass** (`Person`) yang menyediakan template data dan method umum
+- **Dua subclass** (`Customer`, `Staff`) yang memperluas fungsionalitas parent
+- **Pemanggilan `super().__init__()`** untuk inisialisasi atribut parent
+- **Method overriding** pada `show_person_info()` dengan tetap memanggil versi parent
+- **Encapsulation** menggunakan protected (`_`) dan private (`__`) untuk melindungi data
+- **Relasi UML** yang menunjukkan hubungan antar class sesuai prinsip OOP
+
+Dengan struktur ini, kode lebih modular, terhindar dari duplikasi, dan mudah untuk di-maintenance serta pengembangan lebih lanjut.
