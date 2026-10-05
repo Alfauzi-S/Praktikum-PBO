@@ -76,12 +76,6 @@ staff3 = Staff(
     gender="Male"
 )
 
-staff3 = Staff(
-    name="Andi Wijaya", username="andi_manager", password="pass123",
-    employee_id="EMP003", role="Manager", salary=12000000,
-    phone="081456789012", gmail="andi@gmail.com", birth_date="1990-01-20", gender="Male"
-)
-
 my_store.add_staff(admin_staff)
 my_store.add_staff(staff1)
 my_store.add_staff(staff2)

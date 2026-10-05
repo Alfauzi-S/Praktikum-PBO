@@ -33,45 +33,6 @@ class Customer(Person):
         self._address = new_address.strip()
 
     @property
-    def phone(self):
-        return self._phone
-
-    @phone.setter
-    def phone(self, new_phone):
-        if not new_phone or new_phone.strip() == "":
-            raise ValueError("[!] Phone cannot be empty!")
-        if len(new_phone) < 10 or len(new_phone) > 13:
-            raise ValueError("[!] Invalid mobile number! Must be 10-13 digits.")
-        if not new_phone.isdigit():
-            raise ValueError("[!] Phone number must contain only digits!")
-        self._phone = new_phone.strip()
-        
-    @property
-    def gmail(self):
-        return self.__gmail
-
-    @gmail.setter
-    def gmail(self, new_gmail):
-        if not new_gmail or new_gmail.strip() == "":
-            raise ValueError("[!] Gmail cannot be empty!")
-        if "@" not in new_gmail or "." not in new_gmail.split("@")[-1]:
-            raise ValueError("[!] Invalid gmail format! Example: user@gmail.com")
-        if " " in new_gmail:
-            raise ValueError("[!] Gmail cannot contain spaces!")
-        self.__gmail = new_gmail.strip().lower()
-    
-    def change_phone(self, new_phone):
-        self.phone = new_phone
-        print(f"[V] Phone for {self.username} has been changed successfully.")
-    
-    def change_gmail(self, password, new_gmail):
-        if self.password == password:
-            self.gmail = new_gmail
-            print(f"[V] Gmail for {self.username} has been changed successfully.")
-        else:
-            print("[!] Wrong password!")
-
-    @property
     def total_spending(self):
         return self.__total_spending
 
