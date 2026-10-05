@@ -210,5 +210,3 @@ Pilih menu `3. OOP Testing` pada Main Menu untuk melihat bukti langsung implemen
 Proyek Sistem Manajemen Penjualan Perangkat dan Aksesori Komputer ini berhasil mengimplementasikan seluruh persyaratan Posttest 2. Aplikasi tidak hanya berjalan secara fungsional sebagai sistem kasir CLI, tetapi juga dirancang dengan arsitektur OOP yang bersih, modular, dan aman (melalui enkapsulasi ketat).
 
 Pemilihan relasi UML (Inheritance, Agregasi, Komposisi, dan Asosiasi) telah diterapkan sesuai dengan definisi akademis dan logika bisnis dunia nyata, yang semuanya dapat dibuktikan melalui menu OOP Testing yang disediakan.
-
-> Catatan: Dokumen ini dibuat sebagai pengganti screenshot untuk memberikan penjelasan yang lebih terstruktur, dapat dicari (searchable), dan profesional mengenai implementasi kode.
