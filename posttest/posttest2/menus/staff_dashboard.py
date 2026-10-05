@@ -1,5 +1,7 @@
 from utils.helper import clear_screen, pause
-from menus import product_menu, sale_menu, customer_menu
+from menus.product_menu import product_menu
+from menus.sale_menu import sale_menu
+from menus.customer_menu import customer_menu
 
 def staff_dashboard(staff, my_store, customers_db, sales_db):
     while True:

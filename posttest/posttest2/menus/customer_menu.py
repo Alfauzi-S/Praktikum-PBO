@@ -1,5 +1,5 @@
 from utils.helper import clear_screen, pause
-from models.customer import Customer
+from menus.sale_menu import sale_menu
 
 def customer_menu(customers_db):
     while True:

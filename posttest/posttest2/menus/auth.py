@@ -34,7 +34,7 @@ def register_customer(staffs_db, customers_db):
     
     all_users = staffs_db + customers_db
     if any(user.username == username for user in all_users):
-        print(f"\n[!] Username '{username}' is already taken! Please choose another.")
+        print(f"\n[!] Username '{username}' is already taken!")
         pause()
         return
     
@@ -52,6 +52,7 @@ def register_customer(staffs_db, customers_db):
     
     try:
         new_id = f"C{len(customers_db) + 1:03d}"
+        
         new_customer = Customer(
             id_customer=new_id,
             name=name,

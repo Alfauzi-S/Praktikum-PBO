@@ -10,7 +10,7 @@ from models.staff import Staff
 from models.product import Product
 from models.store import Store
 from models.sale import Sale
-from menus import (login, staff_dashboard, customer_dashboard, testing_menu)
+from menus import (login, register_customer, staff_dashboard, customer_dashboard, testing_menu)
 from utils import clear_screen, pause
 
 # INISIALISASI STORE (Agregasi: Induk)
@@ -107,8 +107,9 @@ def main():
         print(f"Location: {my_store.location}")
         print("=" * 50)
         print("1. Login")
-        print("2. OOP Testing")
-        print("3. Exit")
+        print("2. Register as Customer")
+        print("3. OOP Testing")
+        print("4. Exit")
         print("=" * 50)
         
         choice = input("Choose menu: ")
@@ -122,10 +123,12 @@ def main():
                     staff_dashboard(user, my_store, customers_db, sales_db)
                 else:
                     customer_dashboard(user, my_store, customers_db, sales_db)
-            else:
-                pass
         
         elif choice == "2":
+            # PANGGIL FUNGSI REGISTER DI SINI
+            register_customer(staffs_db, customers_db)
+        
+        elif choice == "3":
             testing_menu(
                 my_store._products, 
                 customers_db, 
@@ -136,7 +139,7 @@ def main():
                 store=my_store
             )
         
-        elif choice == "3":
+        elif choice == "4":
             clear_screen()
             print("Thank you for using Computer Sales Management System!")
             break

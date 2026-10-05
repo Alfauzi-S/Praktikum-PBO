@@ -1,4 +1,4 @@
-from .auth import login
+from .auth import login, register_customer
 from .staff_dashboard import staff_dashboard
 from .customer_dashboard import customer_dashboard
 from .product_menu import product_menu
@@ -8,6 +8,7 @@ from .testing_menu import testing_menu
 
 __all__ = [
     'login',
+    'register_customer',
     'staff_dashboard',
     'customer_dashboard',
     'product_menu',
