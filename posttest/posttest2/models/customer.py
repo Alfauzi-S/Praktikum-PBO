@@ -3,27 +3,21 @@ from models.person import Person
 class Customer(Person):
     total_customers = 0
 
-    def __init__(self, name, username, password, id_customer, address, phone, gmail, birth_date="", gender="", membership_tier="Bronze"):
-        super().__init__(name, username, password, birth_date, gender)
+    def __init__(self, id_customer, name, username, password, phone, gmail, address, birth_date="", gender="", membership_tier="Bronze"):
+        super().__init__(name, username, password, phone, gmail, birth_date, gender)
         self.id_customer = id_customer
         self._address = ""
-        self._phone = ""
-        self.__gmail = ""
         self.address = address
-        self.phone = phone
-        self.gmail = gmail
         self.membership_tier = membership_tier
         self.loyalty_points = 0
         self.__total_spending = 0
         
         Customer.total_customers += 1
-
+        
     def show_person_info(self):
         super().show_person_info()
         print(f"ID Customer           : {self.id_customer}")
         print(f"Address               : {self.address}")
-        print(f"Phone                 : {self.phone}")
-        print(f"Gmail                 : {self.gmail}")
         print(f"Membership            : {self.membership_tier}")
         print(f"Loyalty Points        : {self.loyalty_points}")
         print(f"Total Spending        : Rp{self.__total_spending:,}")

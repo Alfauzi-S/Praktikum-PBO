@@ -1,6 +1,5 @@
 from models.person import Person
 
-
 class Staff(Person):
     total_staff = 0
     VALID_ROLES = ["Admin", "Kasir", "Manager", "Teknisi", "Gudang"]
@@ -8,17 +7,13 @@ class Staff(Person):
     BONUS_AMOUNT = 500_000
 
     def __init__(self, name, username, password, employee_id, role, salary, phone, gmail, birth_date="", gender=""):
-        super().__init__(name, username, password, birth_date, gender)
+        super().__init__(name, username, password, phone, gmail, birth_date, gender)
         self.employee_id = employee_id
         self._role = ""
         self.__salary = 0
-        self._phone = ""
-        self.__gmail = ""
         self.__total_bonus = 0
         self.role = role
         self.salary = salary
-        self.phone = phone
-        self.gmail = gmail
         self.total_sales_processed = 0
         self.is_active = True
         Staff.total_staff += 1
@@ -28,8 +23,6 @@ class Staff(Person):
         print(f"Employee ID           : {self.employee_id}")
         print(f"Role                  : {self._role}")
         print(f"Salary                : Rp{self.__salary:,}")
-        print(f"Phone                 : {self._phone}")
-        print(f"Gmail                 : {self.__gmail}")
         print(f"Total Sales Processed : {self.total_sales_processed}")
         print(f"Total Bonus Earned    : Rp{self.__total_bonus:,}")
         print(f"Status                : {'Active' if self.is_active else 'Inactive'}")

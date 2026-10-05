@@ -117,6 +117,8 @@ def reduce_stock(store):
 
 
 def manage_categories():
+    from models.product import Product
+    
     while True:
         clear_screen()
         print("\n=== MANAGE CATEGORIES ===")
@@ -129,10 +131,18 @@ def manage_categories():
         
         if choice == "1":
             new_cat = input("New category name: ").strip()
-            Product.add_category(new_cat)
+            try:
+                Product.add_category(new_cat)
+            except ValueError as e:
+                print(f"\n{e}")
+                
         elif choice == "2":
             cat_to_remove = input("Category to remove: ").strip()
-            Product.remove_category(cat_to_remove)
+            try:
+                Product.remove_category(cat_to_remove)
+            except ValueError as e:
+                print(f"\n{e}")
+                
         elif choice == "3":
             break
         else:

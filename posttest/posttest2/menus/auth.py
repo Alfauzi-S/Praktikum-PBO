@@ -58,9 +58,9 @@ def register_customer(staffs_db, customers_db):
             name=name,
             username=username,
             password=password,
-            address=address,
             phone=phone,
             gmail=gmail,
+            address=address,
             birth_date=birth_date,
             gender=gender
         )
