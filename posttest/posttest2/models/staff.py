@@ -183,7 +183,6 @@ class Staff(Person):
 
     @staticmethod
     def calculate_tax(salary):
-        """Menghitung pajak gaji (fungsi bantu murni)"""
         if salary <= 5_000_000:
             return 0
         elif salary <= 10_000_000:
