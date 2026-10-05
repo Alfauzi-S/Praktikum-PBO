@@ -316,19 +316,6 @@ Pilih menu `3. OOP Testing` pada Main Menu untuk menjalankan pengujian fitur OOP
 | 7. Test Composition | `SaleItem` dibuat di dalam `Sale.add_item()` dan terikat pada `Sale`. |
 | 8. Run All Tests | Menjalankan semua pengujian di atas secara berurutan. |
 
----
-
-## Screenshot Program
-
-> Tambahkan screenshot hasil run di sini (simpan gambar di folder `assets/`), contoh:
->
-> ```
-> ![Main Menu](assets/main_menu.png)
-> ![Test Inheritance](assets/test_inheritance.png)
-> ![Test Agregasi dan Komposisi](assets/test_relasi.png)
-> ```
-
----
 
 ## Kesimpulan
 
