@@ -172,7 +172,6 @@ def main():
                     customer_dashboard(user, my_store, customers_db, sales_db)
         
         elif choice == "2":
-            # PANGGIL FUNGSI REGISTER DI SINI
             register_customer(staffs_db, customers_db)
         
         elif choice == "3":
