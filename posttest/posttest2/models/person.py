@@ -39,8 +39,8 @@ class Person:
             print("[!] The old password is wrong!")
 
     def show_person_info(self):
-        print(f"Name           : {self._name}")
-        print(f"Username       : {self.username}")
-        print(f"Password       : {'*' * len(self.__password)}")
-        print(f"Birth Date     : {self.birth_date}")
-        print(f"Gender         : {self.gender}")
+        print(f"Name                  : {self._name}")
+        print(f"Username              : {self.username}")
+        print(f"Password              : {'*' * len(self.__password)}")
+        print(f"Birth Date            : {self.birth_date}")
+        print(f"Gender                : {self.gender}")
