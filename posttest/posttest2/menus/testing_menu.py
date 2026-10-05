@@ -1,4 +1,7 @@
 from utils.helper import clear_screen, pause
+from models.staff import Staff
+from models.store import Store
+
 
 def testing_menu(products, customers, sales, Product, Customer, Sale, store=None):
     """Menu untuk menguji konsep OOP."""
@@ -29,11 +32,11 @@ def testing_menu(products, customers, sales, Product, Customer, Sale, store=None
         elif choice == "4":
             test_static_method(Product, Customer, Sale)
         elif choice == "5":
-            test_association()
+            test_association(Customer, Product, Sale)
         elif choice == "6":
-            test_aggregation(store)
+            test_aggregation(store, Product)
         elif choice == "7":
-            test_composition(sales)
+            test_composition(sales, Product, Customer, Sale)
         elif choice == "8":
             run_all_tests(products, customers, sales, Product, Customer, Sale, store)
         elif choice == "9":
@@ -64,7 +67,6 @@ def test_inheritance(customers):
     
     print("\n[V] Inheritance Test Completed!")
     print("    Customer inherited attributes and methods from Person.")
-    
     pause()
 
 
@@ -100,7 +102,6 @@ def test_encapsulation(products):
     
     print("\n[V] Encapsulation Test Completed!")
     print("    Private/Protected attributes are protected from invalid values.")
-    
     pause()
 
 
@@ -112,7 +113,7 @@ def test_class_method(Product, Customer, Sale):
     print("=" * 50)
     
     print("\n[1] Testing Product Class Method...")
-    print(f"    Current Category: {Product.VALID_CATEGORIES}")
+    print(f"    Current Categories: {Product.VALID_CATEGORIES}")
     Product.add_category("Test Category")
     print(f"    Updated Categories: {Product.VALID_CATEGORIES}")
     Product.remove_category("Test Category")
@@ -124,7 +125,6 @@ def test_class_method(Product, Customer, Sale):
     Sale.change_tax(11)  # Reset
     
     print("\n[V] Class Method Test Completed!")
-    
     pause()
 
 
@@ -146,97 +146,120 @@ def test_static_method(Product, Customer, Sale):
     print(f"    calculate_discount(100000, 10): {Sale.calculate_discount(100000, 10)}")
     
     print("\n[V] Static Method Test Completed!")
-    
     pause()
 
 
-def test_association():
-    """Menguji konsep Asosiasi."""
+def test_association(Customer, Product, Sale):
+    """Menguji konsep Asosiasi dengan objek sementara (tanpa mempengaruhi data utama)."""
     clear_screen()
     print("=" * 50)
     print("        ASSOCIATION TEST")
     print("=" * 50)
     
-    print("\n[1] Association: Staff 'uses' Sale")
-    print("    - Staff receives Sale as parameter")
-    print("    - Sale is NOT stored permanently in Staff")
-    print("    - Both objects have independent lifecycles")
+    print("\n[1] Membuat objek sementara untuk demonstrasi...")
+    # Objek dibuat secara independen
+    temp_cust = Customer("C999", "Test User", "testuser", "pass123", "Test Address", "081234567890", "test@test.com")
+    temp_prod = Product("P999", "Test Product", 100000, 10, "Peripheral")
+    temp_sale = Sale("TRX-TEST", temp_cust)
+    temp_sale.add_item(temp_prod, 1)
     
-    print("\n[2] Example from Module:")
-    print("    Nasabah menggunakan MesinATM")
-    print("    - Nasabah tidak memiliki ATM")
-    print("    - ATM diterima sebagai parameter method")
-    print("    - Keduanya hidup mandiri")
+    temp_staff = Staff("Test Staff", "teststaff", "pass123", "EMP999", "Kasir", 5000000, "081111111111", "staff@test.com")
+    
+    print(f"    - Dibuat Staff: {temp_staff.name}")
+    print(f"    - Dibuat Sale: {temp_sale.id_sale}")
+    
+    print("\n[2] Mengeksekusi Asosiasi: Staff 'menggunakan' Sale")
+    print("    Memanggil: temp_staff.process_transaction(temp_sale)")
+    
+    # Ini adalah bukti asosiasi: objek Sale diterima sebagai parameter dan diproses
+    temp_staff.process_transaction(temp_sale)
+    
+    print("\n[3] Bukti Siklus Hidup Mandiri:")
+    print("    - Staff memproses sale, tetapi TIDAK menyimpannya sebagai atribut permanen.")
+    print(f"    - hasattr(temp_staff, 'sale') -> {hasattr(temp_staff, 'sale')} (False, tidak ada kepemilikan)")
+    print("    - Kedua objek dapat hidup atau dihapus secara independen.")
     
     print("\n[V] Association Test Completed!")
-    print("    Association = 'menggunakan' (weak relationship)")
-    
+    print("    Asosiasi = 'menggunakan' (hubungan lemah)")
     pause()
 
 
-def test_aggregation(store):
-    """Menguji konsep Agregasi."""
+def test_aggregation(store, Product):
+    """Menguji konsep Agregasi dengan objek sementara (tanpa mempengaruhi data utama)."""
     clear_screen()
     print("=" * 50)
     print("        AGGREGATION TEST")
     print("=" * 50)
     
     if store:
-        print(f"\n[1] Aggregation: Store 'has' Product & Staff")
-        print(f"    Store Name: {store.name}")
-        print(f"    Total Products: {len(store._products)}")
+        print(f"\n[1] Kondisi Store Utama:")
+        print(f"    Nama Store: {store.name}")
+        print(f"    Total Produk: {len(store._products)}")
         print(f"    Total Staff: {len(store._staffs)}")
-        
-        print("\n[2] Key Characteristics:")
-        print("    - Products & Staff created OUTSIDE Store")
-        print("    - Objects sent to Store via add_product() & add_staff()")
-        print("    - If Store deleted, Products & Staff still exist")
-        
-        print("\n[3] Proof:")
-        print("    del store  # Store dihapus")
-        print("    product still exists in memory  # True")
-        print("    staff still exists in memory  # True")
-    else:
-        print("[!] No store available for testing.")
+    
+    print("\n[2] Membuat objek sementara DI LUAR store sementara...")
+    temp_store = Store("Temp Store Demo", "Demo Location")
+    temp_prod = Product("P888", "Temp Mouse", 200000, 50, "Peripheral")
+    temp_staff = Staff("Temp Staff", "tempstaff", "pass123", "EMP888", "Kasir", 4000000, "081222222222", "temp@test.com")
+    
+    print(f"    Dibuat Product: {temp_prod.name}")
+    print(f"    Dibuat Staff: {temp_staff.name}")
+    
+    print("\n[3] Agregasi: Menambahkan mereka ke store sementara...")
+    temp_store.add_product(temp_prod)
+    temp_store.add_staff(temp_staff)
+    print(f"    Temp Store sekarang memiliki {len(temp_store._products)} produk.")
+    
+    print("\n[4] Bukti Siklus Hidup Mandiri (Agregasi):")
+    print("    Menghapus objek store sementara (del temp_store)...")
+    del temp_store
+    print("    Store sementara dihapus dari memori.")
+    
+    print("\n[5] Memverifikasi objek sementara masih ada:")
+    print(f"    temp_prod.name masih: '{temp_prod.name}'")
+    print(f"    temp_staff.name masih: '{temp_staff.name}'")
+    print("    -> Mereka TIDAK ikut musnah ketika store dihapus!")
     
     print("\n[V] Aggregation Test Completed!")
-    print("    Aggregation = 'memiliki' (medium relationship)")
-    
+    print("    Agregasi = 'memiliki' (hubungan sedang, siklus hidup mandiri)")
     pause()
 
 
-def test_composition(sales):
+def test_composition(sales, Product, Customer, Sale):
+    """Menguji konsep Komposisi dengan objek sementara (tanpa mempengaruhi data utama)."""
     clear_screen()
     print("=" * 50)
     print("        COMPOSITION TEST")
     print("=" * 50)
     
     if sales:
-        sale = sales[0]
-        print(f"\n[1] Composition: Sale 'consists of' SaleItem")
-        print(f"    Sale ID: {sale.id_sale}")
-        print(f"    Total Items: {sale.items_count}")
-        
-        print("\n[2] Key Characteristics:")
-        print("    - SaleItem created INSIDE Sale.add_item()")
-        print("    - SaleItem cannot exist without Sale")
-        print("    - If Sale deleted, all SaleItems destroyed")
-        
-        print("\n[3] Proof:")
-        print("    sale = Sale('TRX-001', customer)")
-        print("    sale.add_item(product, 2)  # SaleItem dibuat di dalam")
-        print("    del sale  # Sale dihapus")
-        print("    SaleItem juga ikut musnah  # True")
-    else:
-        print("[!] No sales available for testing.")
-        print("\n[2] Key Characteristics:")
-        print("    - SaleItem created INSIDE Sale.add_item()")
-        print("    - SaleItem cannot exist without Sale")
-        print("    - If Sale deleted, all SaleItems destroyed")
+        print(f"\n[1] Kondisi Penjualan yang Ada:")
+        print(f"    Total Sale di sistem: {len(sales)}")
+        if len(sales) > 0:
+            print(f"    Contoh Sale ID: {sales[0].id_sale} dengan {sales[0].items_count} item")
+    
+    print("\n[2] Membuat Sale sementara dan menambahkan item (Komposisi)...")
+    temp_cust = Customer("C999", "Test User", "testuser", "pass123", "Test Address", "081234567890", "test@test.com")
+    temp_prod = Product("P777", "Temp Keyboard", 300000, 20, "Peripheral")
+    
+    temp_sale = Sale("TRX-COMP-TEST", temp_cust)
+    print(f"    Dibuat Sale: {temp_sale.id_sale}")
+    print(f"    Memanggil temp_sale.add_item(temp_prod, 2)...")
+    
+    # Ini membuat SaleItem DI DALAM sale (bukti komposisi)
+    temp_sale.add_item(temp_prod, 2)
+    
+    print(f"    Sale sekarang memiliki {temp_sale.items_count} item secara internal.")
+    print("    Objek SaleItem dibuat LANGSUNG di dalam method Sale.add_item().")
+    print("    Kita TIDAK memiliki variabel terpisah di luar yang memegang objek SaleItem tersebut.")
+    
+    print("\n[3] Bukti Siklus Hidup Terikat (Komposisi):")
+    print("    SaleItem hanya ada SELAMA temp_sale ada.")
+    print("    Jika kita menghapus temp_sale (del temp_sale), objek SaleItem di dalamnya juga ikut musnah.")
+    print("    (Di Python, garbage collection menangani penghancuran ini secara otomatis).")
     
     print("\n[V] Composition Test Completed!")
-    print("    Composition = 'terdiri dari' (strong relationship)")
-    
+    print("    Komposisi = 'terdiri dari' (hubungan kuat, siklus hidup terikat)")
     pause()
 
 
@@ -271,16 +294,16 @@ def run_all_tests(products, customers, sales, Product, Customer, Sale, store=Non
     print(f"  Valid Price (500000): {Product.validate_price(500000)}")
     
     print("\n[5] Association Test")
-    print("  Staff uses Sale (parameter method)")
+    print("  Staff uses Sale (parameter method) - demonstrated in menu 5")
     
     print("\n[6] Aggregation Test")
     if store:
-        print(f"  Store has {len(store._products)} products")
+        print(f"  Store has {len(store._products)} products (independent lifecycle)")
     else:
         print("  No store available.")
     
     print("\n[7] Composition Test")
-    print(f"  Total Sales: {len(sales)}")
+    print(f"  Total Sales: {len(sales)} (SaleItems created internally)")
     
     print("\n" + "=" * 50)
     print("  ALL OOP TESTS COMPLETED!")
