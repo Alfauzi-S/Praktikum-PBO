@@ -27,21 +27,53 @@ my_store.add_product(prod3)
 
 # INISIALISASI STAFF (Inheritance dari Person)
 admin_staff = Staff(
-    name="Admin Utama", username="admin", password="admin123",
-    employee_id="EMP000", role="Manager", salary=15000000,
-    phone="081111111111", gmail="admin@alfauzi.com"
+    name="Admin Utama", 
+    username="admin", 
+    password="admin123",
+    employee_id="EMP000", 
+    role="Manager", 
+    salary=15000000,
+    phone="081111111111", 
+    gmail="admin@alfauzi.com"
 )
 
 staff1 = Staff(
-    name="Budi Santoso", username="budi_kasir", password="pass123",
-    employee_id="EMP001", role="Kasir", salary=4500000,
-    phone="081234567890", gmail="budi@gmail.com", birth_date="1998-05-10", gender="Male"
+    name="Budi Santoso", 
+    username="budi_kasir", 
+    password="pass123",
+    employee_id="EMP001", 
+    role="Kasir", 
+    salary=4500000,
+    phone="081234567890", 
+    gmail="budi@gmail.com", 
+    birth_date="1998-05-10", 
+    gender="Male"
 )
 
 staff2 = Staff(
-    name="Siti Aminah", username="siti_teknisi", password="pass123",
-    employee_id="EMP002", role="Teknisi", salary=6000000,
-    phone="081345678901", gmail="siti@gmail.com", birth_date="1999-08-15", gender="Female"
+    name="Siti Aminah", 
+    username="siti_teknisi", 
+    password="pass123",
+    employee_id="EMP002", 
+    role="Teknisi", 
+    salary=6000000,
+    phone="081345678901", 
+    gmail="siti@gmail.com", 
+    birth_date="1999-08-15", 
+    gender="Female"
+)
+
+staff3 = Staff(
+    name="Andi Wijaya", 
+    username="andi_manager", 
+    password="pass123",
+    employee_id="EMP003", 
+    role="Manager", 
+    salary=12000000,
+    phone="081456789012", 
+    gmail="andi@gmail.com", 
+    birth_date="1990-01-20", 
+    gender="Male"
 )
 
 staff3 = Staff(
@@ -57,21 +89,42 @@ my_store.add_staff(staff3)
 
 # INISIALISASI CUSTOMER (Inheritance dari Person)
 cust1 = Customer(
-    id_customer="C001", name="Rina Marlina", username="rina_m", password="password1",
-    address="Jl. Pahlawan No. 10", phone="085678901234", gmail="rina@yahoo.com",
-    birth_date="1999-05-12", gender="Female", membership_tier="Silver"
+    id_customer="C001", 
+    name="Rina Marlina", 
+    username="rina_m", 
+    password="password1",
+    phone="085678901234",      
+    gmail="rina@yahoo.com",      
+    address="Jl. Pahlawan No. 10", 
+    birth_date="1999-05-12", 
+    gender="Female", 
+    membership_tier="Silver"
 )
 
 cust2 = Customer(
-    id_customer="C002", name="Daffa Pratama", username="daffa_p", password="password2",
-    address="Jl. Ahmad Yani No. 5", phone="085789012345", gmail="daffa@gmail.com",
-    birth_date="2000-08-20", gender="Male", membership_tier="Gold"
+    id_customer="C002", 
+    name="Daffa Pratama", 
+    username="daffa_p", 
+    password="password2",
+    phone="085789012345",          
+    gmail="daffa@gmail.com",       
+    address="Jl. Ahmad Yani No. 5", 
+    birth_date="2000-08-20", 
+    gender="Male", 
+    membership_tier="Gold"
 )
 
 cust3 = Customer(
-    id_customer="C003", name="Nadia Putri", username="nadia_putri", password="password3",
-    address="Jl. Diponegoro No. 88", phone="085890123456", gmail="nadia@outlook.com",
-    birth_date="2001-01-15", gender="Female", membership_tier="Bronze"
+    id_customer="C003", 
+    name="Nadia Putri", 
+    username="nadia_putri", 
+    password="password3",
+    phone="085890123456",          
+    gmail="nadia@outlook.com",
+    address="Jl. Diponegoro No. 88", 
+    birth_date="2001-01-15", 
+    gender="Female", 
+    membership_tier="Bronze"
 )
 
 customers_db = [cust1, cust2, cust3]
