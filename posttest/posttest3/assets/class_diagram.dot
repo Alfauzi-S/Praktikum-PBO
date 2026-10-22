@@ -1,0 +1,104 @@
+digraph UML {
+  graph [rankdir=TB, nodesep=0.55, ranksep=0.85, fontname="DejaVu Sans", bgcolor="white", pad=0.3];
+  node  [shape=plain, fontname="DejaVu Sans", fontsize=10];
+  edge  [fontname="DejaVu Sans", fontsize=9, color="#333333"];
+
+  Person [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#FFF8E1">
+      <tr><td><b>Person</b></td></tr><hr/>
+      <tr><td align="left">#_name<br align="left"/>#_phone<br align="left"/>-__password<br align="left"/>-__gmail<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+show_person_info()<br align="left"/>+change_password()<br align="left"/></td></tr>
+    </table>>];
+
+  Customer [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#E3F2FD">
+      <tr><td><b>Customer</b></td></tr><hr/>
+      <tr><td align="left">+id_customer<br align="left"/>+membership_tier<br align="left"/>-__total_spending<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+show_person_info()<br align="left"/>+discount_percentage<br align="left"/></td></tr>
+    </table>>];
+
+  Staff [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#E3F2FD">
+      <tr><td><b>Staff</b></td></tr><hr/>
+      <tr><td align="left">+employee_id<br align="left"/>#_role<br align="left"/>-__salary<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+show_person_info()<br align="left"/>+process_transaction(sale, payment)<br align="left"/></td></tr>
+    </table>>];
+
+  Store [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#E8F5E9">
+      <tr><td><b>Store</b></td></tr><hr/>
+      <tr><td align="left">+name<br align="left"/>#_products<br align="left"/>#_staffs<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+add_product()<br align="left"/>+add_staff()<br align="left"/></td></tr>
+    </table>>];
+
+  Product [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#E8F5E9">
+      <tr><td><b>Product</b></td></tr><hr/>
+      <tr><td align="left">+id_product<br align="left"/>#_price<br align="left"/>#_stock<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+reduce_stock()<br align="left"/>+__lt__() / __gt__()<br align="left"/></td></tr>
+    </table>>];
+
+  Sale [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#FCE4EC">
+      <tr><td><b>Sale</b></td></tr><hr/>
+      <tr><td align="left">+id_sale<br align="left"/>#_items<br align="left"/>+payment<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+add_item()<br align="left"/>+checkout(payment)<br align="left"/>+__len__()<br align="left"/></td></tr>
+    </table>>];
+
+  SaleItem [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#FCE4EC">
+      <tr><td><b>SaleItem</b></td></tr><hr/>
+      <tr><td align="left">+product<br align="left"/>+quantity<br align="left"/>+subtotal<br align="left"/></td></tr>
+    </table>>];
+
+  PaymentMethod [label=<
+    <table border="2" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#F3E5F5">
+      <tr><td>&laquo;abstract&raquo;<br/><b><i>PaymentMethod</i></b></td></tr><hr/>
+      <tr><td align="left">#_payer_name<br align="left"/>#_amount<br align="left"/>-__reference_code<br align="left"/></td></tr><hr/>
+      <tr><td align="left"><i>+validate()</i><br align="left"/><i>+calculate_fee()</i><br align="left"/><i>+execute()</i><br align="left"/>+process(amount)<br align="left"/></td></tr>
+    </table>>];
+
+  Cash [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#F3E5F5">
+      <tr><td><b>CashPayment</b></td></tr><hr/>
+      <tr><td align="left">+cash_given<br align="left"/>#_change<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+validate()<br align="left"/>+calculate_fee()<br align="left"/>+execute()<br align="left"/></td></tr>
+    </table>>];
+
+  Bank [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#F3E5F5">
+      <tr><td><b>BankTransferPayment</b></td></tr><hr/>
+      <tr><td align="left">+bank_name<br align="left"/>-__account_number<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+validate()<br align="left"/>+calculate_fee()<br align="left"/>+execute()<br align="left"/></td></tr>
+    </table>>];
+
+  Wallet [label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#F3E5F5">
+      <tr><td><b>EWalletPayment</b></td></tr><hr/>
+      <tr><td align="left">+provider<br align="left"/>+phone<br align="left"/>-__balance<br align="left"/></td></tr><hr/>
+      <tr><td align="left">+validate()<br align="left"/>+calculate_fee()<br align="left"/>+execute()<br align="left"/></td></tr>
+    </table>>];
+
+  // Inheritance (segitiga kosong)
+  Customer -> Person [arrowhead=empty];
+  Staff    -> Person [arrowhead=empty];
+  Cash     -> PaymentMethod [arrowhead=empty];
+  Bank     -> PaymentMethod [arrowhead=empty];
+  Wallet   -> PaymentMethod [arrowhead=empty];
+
+  // Agregasi (belah ketupat kosong di sisi "whole")
+  Store -> Product [dir=both, arrowtail=odiamond, arrowhead=none, label="  agregasi\n  1 .. *", color="#2E7D32", fontcolor="#2E7D32"];
+  Store -> Staff   [dir=both, arrowtail=odiamond, arrowhead=none, label="  agregasi\n  1 .. *", color="#2E7D32", fontcolor="#2E7D32"];
+
+  // Komposisi (belah ketupat penuh di sisi "whole")
+  Sale -> SaleItem [dir=both, arrowtail=diamond, arrowhead=none, label="  komposisi\n  1 .. *", color="#C62828", fontcolor="#C62828", penwidth=1.6];
+
+  // Asosiasi (panah terbuka)
+  Sale     -> Customer      [arrowhead=vee, label="  asosiasi\n  1", color="#1565C0", fontcolor="#1565C0"];
+  Sale     -> PaymentMethod [arrowhead=vee, label="  asosiasi\n  0..1", color="#1565C0", fontcolor="#1565C0"];
+  SaleItem -> Product       [arrowhead=vee, label="  asosiasi\n  1", color="#1565C0", fontcolor="#1565C0"];
+  Staff    -> Sale          [arrowhead=vee, style=dashed, label="  asosiasi (parameter)", color="#1565C0", fontcolor="#1565C0"];
+
+  { rank=same; Customer; Staff; }
+  { rank=same; Cash; Bank; Wallet; }
+}
