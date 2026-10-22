@@ -78,20 +78,28 @@ def test_encapsulation(app):
 
 def test_relations(app):
     store, branch, product, admin, customer = _demo_world()
-    print("[Komposisi] Store membuat Branch di dalam add_branch():")
+
+    print("[Komposisi] Store membuat Branch DI DALAM add_branch() (tidak dari luar):")
     new_branch = store.add_branch("Cabang Baru", "Jl. Baru", "0541999999")
-    print(f"    {new_branch.name} dibuat oleh Store (total cabang: {len(store)})")
-    print("[Komposisi] Sale membuat SaleItem di dalam add_item():")
+    print(f"    {new_branch.name} dibuat oleh Store -> total cabang: {len(store)}")
+
+    print("\n[Komposisi] Sale membuat SaleItem DI DALAM add_item():")
     sale = Sale("TRX-DEMO", customer, branch, admin)
     sale.add_item(product, 2)
-    print(f"    Sale punya {len(sale)} item, stok produk sekarang {product.stock}")
+    print(f"    Sale punya {len(sale)} item (SaleItem tidak dibuat dari luar Sale)")
 
-    print("[Agregasi] Product & Admin dibuat DI LUAR Branch lalu didaftarkan:")
-    print(f"    Branch punya {len(branch)} produk dan {len(branch.admins)} admin")
-    del branch
-    print(f"    Branch dihapus, tetapi '{product.name}' dan '{admin.name}' masih ada (siklus hidup mandiri)")
+    print("\n[Agregasi] Product & Admin dibuat DI LUAR Branch, lalu didaftarkan:")
+    lone_branch = Branch("B99", "Cabang Lepas", "Jl. Lepas", "0541000099")
+    spare_product = Product("P901", "Spare Keyboard", 300000, 5, "Peripheral")
+    spare_admin = Admin("EMP901", "Spare Admin", "spareadmin", "secret1", "081200000005", "s@demo.com")
+    lone_branch.add_product(spare_product)
+    lone_branch.add_admin(spare_admin)
+    print(f"    Branch punya {len(lone_branch)} produk dan {len(lone_branch.admins)} admin")
+    del lone_branch
+    print(f"    Branch dihapus, tetapi '{spare_product.name}' dan '{spare_admin.name}' masih ada")
+    print("    (siklus hidup mandiri: bisa dipindah ke cabang lain)")
 
-    print("[Asosiasi] Sale hanya mengacu ke Customer / Admin:")
+    print("\n[Asosiasi] Sale hanya mengacu ke Customer / Admin:")
     print(f"    sale.customer = {sale.customer.name}, sale.handled_by = {sale.handled_by.name}")
     print(f"    customer tetap ada tanpa sale: {customer.name}")
 
@@ -137,6 +145,7 @@ def test_polymorphism(app):
     for user in (customer, admin, boss):
         print(f"    {user.get_role():<12} | permissions={len(user.get_permissions()):>2} | "
               f"can_see(notif cabang)={user.can_see(note)}")
+    store.add_branch("Second Branch", "Jl. Demo 3", "0541000002")   # agar perbedaan terlihat
     print("    Admin.accessible_branches   ->", [b.name for b in admin.accessible_branches(store)])
     print("    SuperAdmin.accessible_branches ->", [b.name for b in boss.accessible_branches(store)])
 
