@@ -1,84 +1,75 @@
 from models.person import Person
 
-class Customer(Person):
-    total_customers = 0
 
-    def __init__(self, id_customer, name, username, password, phone, gmail, address, birth_date="", gender="", membership_tier="Bronze"):
+class Customer(Person):
+    TIERS = [(50_000_000, "Platinum"), (10_000_000, "Gold"), (1_000_000, "Silver"), (0, "Bronze")]
+    DISCOUNT_RATES = {"Bronze": 0.0, "Silver": 0.01, "Gold": 0.05, "Platinum": 0.10}
+    PERMISSIONS = frozenset({"view_products", "shop", "my_orders", "my_notifications", "profile"})
+
+    def __init__(self, id_customer, name, username, password, phone, gmail, address,
+                 birth_date="", gender=""):
         super().__init__(name, username, password, phone, gmail, birth_date, gender)
         self.id_customer = id_customer
         self._address = ""
         self.address = address
-        self.membership_tier = membership_tier
+        self.membership_tier = "Bronze"
         self.loyalty_points = 0
         self.__total_spending = 0
-        
-        Customer.total_customers += 1
-        
-    def show_person_info(self):
-        super().show_person_info()
-        print(f"ID Customer           : {self.id_customer}")
-        print(f"Address               : {self.address}")
-        print(f"Membership            : {self.membership_tier}")
-        print(f"Loyalty Points        : {self.loyalty_points}")
-        print(f"Total Spending        : Rp{self.__total_spending:,}")
+
+    def get_role(self):
+        return "Customer"
+
+    def get_permissions(self):
+        return Customer.PERMISSIONS
+
+    def can_see(self, notification):
+        return notification.customer is self
 
     @property
     def address(self):
         return self._address
 
     @address.setter
-    def address(self, new_address):
-        if not new_address or new_address.strip() == "":
-            raise ValueError("[!] Address cannot be empty!")
-        self._address = new_address.strip()
+    def address(self, value):
+        if not value or value.strip() == "":
+            raise ValueError("Address cannot be empty!")
+        self._address = value.strip()
+
+    def update_profile(self, address=None, **kwargs):
+        super().update_profile(**kwargs)
+        if address is not None:
+            self.address = address
 
     @property
     def total_spending(self):
         return self.__total_spending
 
+    @property
+    def discount_percentage(self):
+        return int(Customer.DISCOUNT_RATES[self.membership_tier] * 100)
+
     def add_spending(self, amount):
         if amount < 0:
-            raise ValueError("[!] Spending amount cannot be negative!")
+            raise ValueError("Spending cannot be negative!")
         self.__total_spending += amount
         self._auto_upgrade_membership()
 
     def _auto_upgrade_membership(self):
-        if self.__total_spending >= 50_000_000:
-            new_tier = "Platinum"
-        elif self.__total_spending >= 10_000_000:
-            new_tier = "Gold"
-        elif self.__total_spending >= 1_000_000:
-            new_tier = "Silver"
-        else:
-            new_tier = "Bronze"
-
+        # Tier ditentukan dari tabel data, bukan rantai if/elif
+        new_tier = next(tier for limit, tier in Customer.TIERS if self.__total_spending >= limit)
         if new_tier != self.membership_tier:
-            old_tier = self.membership_tier
+            print(f"[+] {self._name} moved from [{self.membership_tier}] to [{new_tier}]")
             self.membership_tier = new_tier
-            print(f"[+] Congratulations! {self._name} moved up a tier from [{old_tier}] to [{new_tier}]")
 
     def add_points(self, points):
         if points < 0:
-            raise ValueError("[!] Points cannot be negative!")
+            raise ValueError("Points cannot be negative!")
         self.loyalty_points += points
-        print(f"[+] {self._name} earned [{points}] points.")
 
-    def redeem_points(self, points):
-        if points > self.loyalty_points:
-            print(f"[!] Not enough points! Current points: {self.loyalty_points}")
-            return False
-        self.loyalty_points -= points
-        print(f"[+] {self._name} exchanged {points} points.")
-        return True
-
-    DISCOUNT_RATES = {"Bronze": 0.0, "Silver": 0.01, "Gold": 0.05, "Platinum": 0.10}
-
-    @property
-    def discount_percentage(self):
-        return int(Customer.DISCOUNT_RATES.get(self.membership_tier, 0.0) * 100)
-
-    @staticmethod
-    def calculate_discount(total_amount, membership_tier):
-        rate = Customer.DISCOUNT_RATES.get(membership_tier, 0.0)
-        discount = int(total_amount * rate)
-        return discount
+    def show_person_info(self):
+        super().show_person_info()
+        print(f"Customer ID           : {self.id_customer}")
+        print(f"Address               : {self._address}")
+        print(f"Membership            : {self.membership_tier} ({self.discount_percentage}% discount)")
+        print(f"Loyalty Points        : {self.loyalty_points}")
+        print(f"Total Spending        : Rp{self.__total_spending:,.0f}")

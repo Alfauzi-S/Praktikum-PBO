@@ -1,21 +1,17 @@
 class SaleItem:
-    total_items_created = 0
+    """Satu baris barang. Dibuat di dalam Sale / OrderRequest (komposisi)."""
 
     def __init__(self, product, quantity):
         if quantity <= 0:
-            raise ValueError("[!] Quantity must be greater than 0!")
-        
-        self.product = product
+            raise ValueError("Quantity must be greater than 0!")
+        self.product = product                      # Asosiasi: SaleItem -> Product
+        self.product_name = product.name            # snapshot agar riwayat tetap akurat
+        self.unit_price = product.price
         self.quantity = quantity
-        self.subtotal = product.price * quantity
-        SaleItem.total_items_created += 1
+
+    @property
+    def subtotal(self):
+        return self.unit_price * self.quantity
 
     def __str__(self):
-        return (f"  {self.product.name} x{self.quantity} "
-                f"@ Rp{self.product.price:,.0f} = Rp{self.subtotal:,.0f}")
-
-    def get_info(self):
-        print(f"  [{self.product.id_product}] {self.product.name}")
-        print(f"    Qty    : {self.quantity}")
-        print(f"    Price  : Rp{self.product.price:,.0f}")
-        print(f"    Subtotal: Rp{self.subtotal:,.0f}")
+        return f"{self.product_name} x{self.quantity} @ Rp{self.unit_price:,.0f} = Rp{self.subtotal:,.0f}"

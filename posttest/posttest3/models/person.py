@@ -1,91 +1,125 @@
-class Person:
+from abc import ABC, abstractmethod
+
+
+class Person(ABC):
+    """Abstract base class untuk semua pengguna sistem (Customer, Admin, SuperAdmin).
+
+    Subclass wajib menentukan role, hak akses (permission), dan notifikasi
+    mana yang boleh dilihatnya. Data akun & profil dikelola di sini sekali saja.
+    """
+
     total_people = 0
 
     def __init__(self, name, username, password, phone, gmail, birth_date="", gender=""):
-        self._name = name
-        self.__password = password
+        self._name = ""                 # Protected
+        self._username = ""             # Protected
+        self._phone = ""                # Protected
+        self.__password = ""            # Private
+        self.__gmail = ""               # Private
+        self.name = name
         self.username = username
-        self._phone = ""
-        self.__gmail = ""
+        self.set_password(password)
         self.phone = phone
         self.gmail = gmail
         self.birth_date = birth_date
         self.gender = gender
+        self.is_active = True
         Person.total_people += 1
-        
+
+    # ---------- Abstract methods ----------
+    @abstractmethod
+    def get_role(self):
+        """Nama role pengguna."""
+
+    @abstractmethod
+    def get_permissions(self):
+        """Kumpulan kunci aksi yang boleh dilakukan role ini."""
+
+    @abstractmethod
+    def can_see(self, notification):
+        """True jika notifikasi tersebut boleh dilihat pengguna ini."""
+
+    # ---------- Properti dengan validasi ----------
     @property
     def name(self):
         return self._name
 
     @name.setter
-    def name(self, new_name):
-        if not new_name or new_name.strip() == "":
+    def name(self, value):
+        if not value or value.strip() == "":
             raise ValueError("Name cannot be empty!")
-        self._name = new_name
+        self._name = value.strip()
 
     @property
-    def password(self):
-        return self.__password
+    def username(self):
+        return self._username
 
-    @password.setter
-    def password(self, new_password):
-        if not new_password or new_password.strip() == "":
-            raise ValueError("[!] Password cannot be empty!")
-        if len(new_password) < 6:
-            raise ValueError("[!] Password must be at least 6 characters!")
-        self.__password = new_password
+    @username.setter
+    def username(self, value):
+        value = (value or "").strip()
+        if len(value) < 3 or " " in value:
+            raise ValueError("Username must be at least 3 characters and contain no spaces!")
+        self._username = value
 
     @property
     def phone(self):
         return self._phone
 
     @phone.setter
-    def phone(self, new_phone):
-        if not new_phone or new_phone.strip() == "":
-            raise ValueError("[!] Phone cannot be empty!")
-        if len(new_phone) < 10 or len(new_phone) > 13:
-            raise ValueError("[!] Invalid mobile number! Must be 10-13 digits.")
-        if not new_phone.isdigit():
-            raise ValueError("[!] Phone number must contain only digits!")
-        self._phone = new_phone.strip()
-        
+    def phone(self, value):
+        value = (value or "").strip()
+        if not value.isdigit() or not 10 <= len(value) <= 13:
+            raise ValueError("Phone must be 10-13 digits!")
+        self._phone = value
+
     @property
     def gmail(self):
         return self.__gmail
 
     @gmail.setter
-    def gmail(self, new_gmail):
-        if not new_gmail or new_gmail.strip() == "":
-            raise ValueError("[!] Gmail cannot be empty!")
-        if "@" not in new_gmail or "." not in new_gmail.split("@")[-1]:
-            raise ValueError("[!] Invalid gmail format! Example: user@gmail.com")
-        if " " in new_gmail:
-            raise ValueError("[!] Gmail cannot contain spaces!")
-        self.__gmail = new_gmail.strip().lower()
-    
-    def change_phone(self, new_phone):
-        self.phone = new_phone
-        print(f"[V] Phone for {self.username} has been changed successfully.")
-    
-    def change_gmail(self, password, new_gmail):
-        if self.__password == password:
-            self.gmail = new_gmail
-            print(f"[V] Gmail for {self.username} has been changed successfully.")
-        else:
-            print("[!] Wrong password!")
+    def gmail(self, value):
+        value = (value or "").strip().lower()
+        if " " in value or "@" not in value or "." not in value.split("@")[-1]:
+            raise ValueError("Invalid email format! Example: user@gmail.com")
+        self.__gmail = value
+
+    # ---------- Akun ----------
+    def set_password(self, new_password):
+        if not new_password or len(new_password) < 6:
+            raise ValueError("Password must be at least 6 characters!")
+        self.__password = new_password
+
+    def verify_password(self, password):
+        return self.__password == password
 
     def change_password(self, old_password, new_password):
-        if self.__password == old_password:
-            self.password = new_password
-            print(f"[V] Password for {self.username} has been changed successfully.")
-        else:
-            print("[!] The old password is wrong!")
+        if not self.verify_password(old_password):
+            raise ValueError("The old password is wrong!")
+        self.set_password(new_password)
+
+    # ---------- Profil ----------
+    def update_profile(self, name=None, phone=None, gmail=None, birth_date=None, gender=None):
+        if name is not None:
+            self.name = name
+        if phone is not None:
+            self.phone = phone
+        if gmail is not None:
+            self.gmail = gmail
+        if birth_date is not None:
+            self.birth_date = birth_date
+        if gender is not None:
+            self.gender = gender
 
     def show_person_info(self):
+        print(f"Role                  : {self.get_role()}")
         print(f"Name                  : {self._name}")
-        print(f"Username              : {self.username}")
-        print(f"Password              : {'*' * len(self.__password)}")
+        print(f"Username              : {self._username}")
+        print(f"Password              : {'*' * 8}")
         print(f"Phone                 : {self._phone}")
-        print(f"Gmail                 : {self.__gmail}")
-        print(f"Birth Date            : {self.birth_date}")
-        print(f"Gender                : {self.gender}")
+        print(f"Email                 : {self.__gmail}")
+        print(f"Birth Date            : {self.birth_date or '-'}")
+        print(f"Gender                : {self.gender or '-'}")
+        print(f"Status                : {'Active' if self.is_active else 'Inactive'}")
+
+    def __str__(self):
+        return f"{self._name} ({self.get_role()})"

@@ -1,208 +1,130 @@
-from models.sale_item import SaleItem
 from datetime import datetime
+from models.sale_item import SaleItem
+
 
 class Sale:
-    total_sales = 0
+    """Pesanan resmi yang dibuat admin setelah pembayaran divalidasi."""
+
     tax = 11
 
-    def __init__(self, id_sale, customer):
+    def __init__(self, id_sale, customer, branch, handled_by):
         self.id_sale = id_sale
-        self.customer = customer
+        self.customer = customer                    # Asosiasi: Sale -> Customer
+        self.branch = branch                        # Asosiasi: Sale -> Branch
+        self.handled_by = handled_by                # Asosiasi: Sale -> Admin
+        self.payment = None                         # Asosiasi: Sale -> PaymentMethod (abstraksi)
         self._items = []
         self.discount_percentage = 0
         self.__total = 0
         self.is_completed = False
-        self.payment = None  # Asosiasi: Sale -> PaymentMethod (abstraksi, bukan kelas konkret)
-        Sale.total_sales += 1
+        self.created_at = datetime.now()
 
     @property
     def total(self):
         return self.__total
 
-    @total.setter
-    def total(self, new_total):
-        if new_total < 0:
-            raise ValueError("[!] Total cannot be negative!")
-        self.__total = new_total
+    @property
+    def items(self):
+        return list(self._items)
 
     @property
-    def items_count(self):
-        return len(self._items)
+    def subtotal(self):
+        return sum(i.subtotal for i in self._items)
 
     def add_item(self, product, quantity):
-        if quantity <= 0:
-            print("[!] Quantity must be greater than 0!")
+        """Membuat SaleItem DI DALAM Sale (komposisi) dan mengurangi stok."""
+        if quantity <= 0 or quantity > product.stock:
+            print(f"[!] Not enough stock for {product.name}! Available: {product.stock}")
             return False
-
-        if quantity > product.stock:
-            print(f"[!] Not enough stock for {product.name}!")
-            return False
-
-        for item in self._items:
-            if item.product.id_product == product.id_product:
-                additional = quantity
-                if additional > product.stock:
-                    print(f"[!] Not enough stock for {product.name}!")
-                    return False
-                item.quantity += additional
-                item.subtotal = item.quantity * item.product.price
-                product.reduce_stock(additional)
-                print(f"[+] Added {additional}x more {product.name} to sale. Total: {item.quantity}x")
-                return True
-
-        new_item = SaleItem(product, quantity)
-        self._items.append(new_item)
-        product.reduce_stock(quantity)
-        print(f"[+] Added {quantity}x {product.name} to sale.")
-        return True
-
-    def remove_item(self, product_id):
-        initial_count = len(self._items)
-        
-        for item in self._items:
-            if item.product.id_product == product_id:
-                item.product.stock += item.quantity
-                print(f"[+] Stock for '{item.product.name}' restored by {item.quantity}.")
-                break
-        
-        self._items = [item for item in self._items if item.product.id_product != product_id]
-        
-        if len(self._items) < initial_count:
-            print(f"[-] Item {product_id} removed from sale.")
-            return True
+        existing = next((i for i in self._items if i.product is product), None)
+        if existing:
+            existing.quantity += quantity
         else:
-            print(f"[!] Item {product_id} not found in sale.")
-            return False
+            self._items.append(SaleItem(product, quantity))
+        product.reduce_stock(quantity)
+        return True
 
     def set_discount(self, percentage):
-        if 0 <= percentage <= 100:
-            self.discount_percentage = percentage
-            print(f"[+] Discount set to {percentage}%")
-        else:
-            print("[!] Discount must be between 0 and 100!")
+        if not 0 <= percentage <= 100:
+            raise ValueError("Discount must be between 0 and 100!")
+        self.discount_percentage = percentage
+
+    @property
+    def discount_amount(self):
+        return self.subtotal * self.discount_percentage / 100
+
+    @property
+    def tax_amount(self):
+        return (self.subtotal - self.discount_amount) * Sale.tax / 100
 
     def calculate_total(self):
-        grand_subtotal = sum(item.subtotal for item in self._items)
-        after_discount = Sale.calculate_discount(grand_subtotal, self.discount_percentage)
-        tax_amount = after_discount * (Sale.tax / 100)
-        self.total = after_discount + tax_amount
-
-    def process_sale(self):
-        if not self._items:
-            print("[!] Cannot process an empty sale!")
-            return False
-
-        if self.is_completed:
-            print("[!] This sale has already been processed!")
-            return False
-
-        self.calculate_total()
-
-        points_earned = int(self.total // 10000)
-        self.customer.add_points(points_earned)
-
-        self.customer.add_spending(self.total)
-
-        self.is_completed = True
-        print("[V] Sale processed successfully!")
-        return True
+        self.__total = self.subtotal - self.discount_amount + self.tax_amount
+        return self.__total
 
     def checkout(self, payment):
-        """Bayar lalu selesaikan transaksi.
-
-        Sale hanya bergantung pada abstraksi PaymentMethod (DIP): cukup memanggil
-        payment.process(), tanpa peduli Cash, Transfer, atau E-Wallet (OCP).
-        """
+        """Bayar lalu selesaikan. Hanya bergantung pada abstraksi PaymentMethod (DIP)."""
         if not self._items:
             print("[!] Cannot process an empty sale!")
             return False
-
         if self.is_completed:
             print("[!] This sale has already been processed!")
             return False
 
         self.calculate_total()
-
         if not payment.process(self.total):
             return False
 
         self.payment = payment
-        return self.process_sale()
+        self.customer.add_points(int(self.total // 10000))
+        self.customer.add_spending(self.total)
+        self.handled_by.record_order()
+        self.is_completed = True
+        return True
 
     def cancel(self):
-        """Batalkan sale yang belum selesai dan kembalikan stok semua item."""
+        """Batalkan sale yang belum selesai dan kembalikan stok."""
         for item in self._items:
             item.product.stock += item.quantity
         self._items = []
-        print(f"[-] Sale {self.id_sale} cancelled. Stock restored.")
-
-    def __len__(self):
-        return len(self._items)
 
     def show_receipt(self):
-        if not self._items:
-            print("[!] No items in this sale!")
-            return
-
-        grand_subtotal = sum(item.subtotal for item in self._items)
-        after_discount = Sale.calculate_discount(grand_subtotal, self.discount_percentage)
-        discount_amount = grand_subtotal - after_discount
-        tax_amount = after_discount * (Sale.tax / 100)
-
         print("\n" + "=" * 50)
         print("              SALES RECEIPT")
         print("=" * 50)
-        print(f"Sale ID     : {self.id_sale}")
+        print(f"Order ID    : {self.id_sale}")
+        print(f"Branch      : {self.branch.name}")
         print(f"Customer    : {self.customer.name} ({self.customer.membership_tier})")
-        print(f"Date        : {Sale._get_current_date()}")
+        print(f"Handled by  : {self.handled_by.name}")
+        print(f"Date        : {self.created_at:%Y-%m-%d %H:%M:%S}")
         print("-" * 50)
-        
         for item in self._items:
-            print(item)
-
+            print(f"  {item}")
         print("-" * 50)
-        print(f"Subtotal    : Rp{grand_subtotal:,.0f}")
-
-        if self.discount_percentage > 0:
-            print(f"Discount    : {self.discount_percentage}% (-Rp{discount_amount:,.0f})")
-
-        if Sale.tax > 0:
-            print(f"Tax ({Sale.tax}%)   : +Rp{tax_amount:,.0f}")
-
+        print(f"Subtotal    : Rp{self.subtotal:,.0f}")
+        if self.discount_percentage:
+            print(f"Discount    : {self.discount_percentage}% (-Rp{self.discount_amount:,.0f})")
+        print(f"Tax ({Sale.tax}%)   : +Rp{self.tax_amount:,.0f}")
         print("=" * 50)
         print(f"TOTAL       : Rp{self.total:,.0f}")
         if self.payment:
-            print(f"Payment     : {self.payment}")
-        print("=" * 50 + "\n")
+            print(f"Payment     : {self.payment} | Ref {self.payment.reference_code}")
+        print("=" * 50)
 
-    def show_items(self):
-        print(f"\n=== ITEMS IN SALE {self.id_sale} ===")
-        if not self._items:
-            print("  No items yet.")
-        else:
-            for i, item in enumerate(self._items, 1):
-                print(f"{i}. {item}")
-        print(f"Total Items: {len(self._items)}\n")
+    # ---------- Operator overloading ----------
+    def __len__(self):
+        return len(self._items)
+
+    def __lt__(self, other):
+        return self.total < other.total
+
+    def __gt__(self, other):
+        return self.total > other.total
+
+    def __str__(self):
+        return f"{self.id_sale} | {self.customer.name} | {self.branch.name} | Rp{self.total:,.0f}"
 
     @classmethod
     def change_tax(cls, new_tax):
         if new_tax < 0:
-            print("[!] Tax cannot be negative!")
-        else:
-            old_tax = cls.tax
-            cls.tax = new_tax
-            print(f"[V] Tax changed: {old_tax}% → {cls.tax}%")
-
-    @classmethod
-    def reset_total_sales(cls):
-        cls.total_sales = 0
-
-    @staticmethod
-    def calculate_discount(total, percentage):
-        if percentage < 0 or percentage > 100:
-            return total
-        return total - (total * percentage / 100)
-
-    @staticmethod
-    def _get_current_date():
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            raise ValueError("Tax cannot be negative!")
+        cls.tax = new_tax

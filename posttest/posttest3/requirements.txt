@@ -1,1 +1,1 @@
-tabulate
+# tidak ada dependensi eksternal (hanya standard library)

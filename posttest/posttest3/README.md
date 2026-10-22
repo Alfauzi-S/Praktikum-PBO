@@ -2,7 +2,7 @@
 
 > **Nama:** Muhammad Alfauzi Syahputra
 > **Mata Kuliah:** Pemrograman Berorientasi Objek (OOP)
-> **Bahasa Pemrograman:** Python 3
+> **Bahasa Pemrograman:** Python 3 (hanya standard library)
 > **Tugas:** Posttest 3 — Polimorfisme & Abstraksi
 
 ---
@@ -10,46 +10,69 @@
 ## Daftar Isi
 
 1. [Deskripsi Program](#deskripsi-program)
-2. [Struktur Proyek](#struktur-proyek)
-3. [Class Diagram & Relasi UML](#1-class-diagram--relasi-uml)
-4. [Abstraksi](#2-abstraksi-abstract-base-class)
-5. [Polimorfisme](#3-polimorfisme)
-6. [Nilai Plus: SOLID](#nilai-plus-prinsip-solid)
-7. [Cara Menjalankan](#cara-menjalankan)
-8. [Screenshot Output](#screenshot-output)
+2. [Role & Hak Akses](#role--hak-akses)
+3. [Alur Belanja](#alur-belanja)
+4. [Struktur Proyek](#struktur-proyek)
+5. [Class Diagram & Relasi UML](#1-class-diagram--relasi-uml)
+6. [Abstraksi](#2-abstraksi-abstract-base-class)
+7. [Polimorfisme](#3-polimorfisme)
+8. [Nilai Plus: SOLID](#nilai-plus-prinsip-solid)
+9. [Cara Menjalankan](#cara-menjalankan)
+10. [Screenshot Output](#screenshot-output)
 
 ---
 
 ## Deskripsi Program
 
-Aplikasi CLI untuk simulasi kasir dan manajemen toko komputer. Pengguna dapat login/register sebagai **Staff** atau **Customer**, mengelola produk, dan melakukan transaksi penjualan dengan diskon membership dan pajak.
+Aplikasi CLI manajemen toko komputer multi-cabang dengan tiga role: **Customer**, **Admin** (per cabang), dan **Super Admin**. Customer memilih barang, admin cabang memproses pesanan dan memvalidasi pembayaran, sedangkan super admin mengelola admin, profil toko, dan cabang. Semua kejadian penting tercatat di log/history.
 
-Pada posttest ini ditambahkan **sistem pembayaran**: setiap transaksi dibayar lewat metode pembayaran (Tunai, Transfer Bank, E-Wallet) yang dimodelkan dengan **abstract class `PaymentMethod`**. Setelah pembayaran berhasil, pelanggan menerima notifikasi lewat kanal berbeda (Email, SMS, WhatsApp) yang dimodelkan dengan **duck typing**.
+## Role & Hak Akses
 
----
+| Role | Hak akses |
+|---|---|
+| **Customer** | Melihat produk per cabang, belanja (membuat request), melihat status pesanan, notifikasi, ubah profil dan akun (username & password) |
+| **Admin** | Notifikasi request, memproses request customer (buat pesanan + validasi pembayaran / tolak), membuat pesanan langsung (walk-in), kelola produk cabang, kelola customer (tambah, ubah profil/akun, reset password, aktif/nonaktif), history/log, ubah profil dan akun sendiri |
+| **Super Admin** | Semua akses Admin (di semua cabang) + membuat & mengelola akun admin, ubah profil toko, tambah/ubah/hapus cabang |
+
+Hak akses ditentukan oleh method `get_permissions()` pada tiap kelas role, dan menu dashboard dibangun otomatis dari situ (tanpa `if/elif` role).
+
+## Alur Belanja
+
+```text
+Customer pilih barang → Request dibuat + notifikasi ke admin cabang
+        → Admin membuat pesanan & memvalidasi pembayaran
+        → Tercatat di log/history (+ notifikasi ke customer)
+```
+
+1. **Customer** memilih cabang dan barang, lalu mengirim request (`OrderService.submit_request`). Sistem membuat `Notification` untuk admin cabang tersebut.
+2. **Admin** membuka *Customer Requests*, memilih request, lalu memilih metode pembayaran dan memasukkan data pembayaran. `PaymentMethod.process()` memvalidasi pembayaran; jika valid, `Sale` (pesanan resmi) dibuat, stok berkurang, diskon membership dan poin diterapkan. Admin juga dapat **menolak** request dengan alasan.
+3. Hasilnya masuk ke `ActivityLog` (history) dan `Sale` disimpan; customer menerima notifikasi (dalam aplikasi + Email/SMS).
 
 ## Struktur Proyek
 
 ```text
 posttest3/
 ├── main.py
-├── README.md
-├── requirements.txt
-├── assets/                  # diagram & screenshot
+├── seed.py                    # data awal (dibuat lewat alur aplikasi)
 ├── models/
-│   ├── person.py            # Superclass
-│   ├── customer.py          # Subclass Person
-│   ├── staff.py             # Subclass Person
-│   ├── product.py           # + operator overloading __lt__ / __gt__
-│   ├── store.py
-│   ├── sale.py              # + checkout(payment), __len__
-│   ├── sale_item.py
-│   ├── payment.py           # BARU: PaymentMethod (ABC) + 3 subclass
-│   └── notifier.py          # BARU: Email/SMS/WhatsApp (duck typing)
+│   ├── person.py              # Person (ABC)
+│   ├── customer.py            # Customer(Person)
+│   ├── admin.py               # Admin(Person), SuperAdmin(Admin)
+│   ├── store.py  branch.py    # profil toko & cabang
+│   ├── product.py
+│   ├── order_request.py       # request dari customer
+│   ├── sale.py  sale_item.py  # pesanan resmi
+│   ├── payment.py             # PaymentMethod (ABC) + 3 subclass
+│   ├── notifier.py            # Email/SMS/WhatsApp (duck typing)
+│   ├── notification.py  activity_log.py
+│   ├── app_data.py            # penyimpanan data (in-memory)
+│   └── order_service.py       # alur request -> order -> log
 ├── menus/
-│   ├── payment_prompt.py    # BARU: pilihan pembayaran di menu
-│   └── testing_menu.py      # + test Abstraksi, Polimorfisme, SOLID
-└── utils/
+│   ├── dashboard.py           # menu dibangun dari permission
+│   ├── customer_actions.py  admin_actions.py  superadmin_actions.py
+│   ├── profile_actions.py  payment_prompt.py  auth.py  testing_menu.py
+├── utils/helper.py
+└── assets/                    # diagram & screenshot
 ```
 
 ---
@@ -58,163 +81,104 @@ posttest3/
 
 ![Class Diagram](assets/class_diagram.png)
 
-Simbol: segitiga kosong = inheritance, belah ketupat kosong = agregasi, belah ketupat penuh = komposisi, panah terbuka = asosiasi (putus-putus = hanya lewat parameter method). Nama kelas abstrak ditulis *miring* dengan stereotype `«abstract»`.
-
-### Penjelasan Relasi
+Simbol: segitiga kosong = inheritance, belah ketupat kosong = agregasi, belah ketupat penuh = komposisi, panah terbuka = asosiasi. Kelas abstrak ditulis miring dengan `«abstract»`.
 
 | Relasi | Dari → Ke | Bukti di kode |
 |---|---|---|
-| **Asosiasi** | `Sale` → `Customer`, `Sale` → `PaymentMethod`, `SaleItem` → `Product`, `Staff` ⇢ `Sale` | `Sale.__init__` menyimpan `self.customer`; `Sale.checkout()` menyimpan `self.payment`; `Staff.process_transaction(sale, payment)` hanya menerima `Sale` sebagai parameter |
-| **Agregasi** | `Store` ◇— `Product` dan `Store` ◇— `Staff` | `Store.add_product()` / `add_staff()` di `models/store.py` |
-| **Komposisi** | `Sale` ◆— `SaleItem` | `SaleItem` dibuat di dalam `Sale.add_item()` |
+| **Asosiasi** | `Sale` → `Customer`, `Admin`, `PaymentMethod`; `OrderRequest` → `Customer`; `SaleItem` → `Product` | `Sale.__init__` menyimpan `customer` dan `handled_by`, `Sale.checkout()` menyimpan `payment` |
+| **Agregasi** | `Branch` ◇— `Product`, `Branch` ◇— `Admin` | `Branch.add_product()` / `add_admin()`; objek dibuat di luar (`seed.py`) lalu didaftarkan |
+| **Komposisi** | `Store` ◆— `Branch`, `Sale` ◆— `SaleItem`, `OrderRequest` ◆— `SaleItem` | `Store.add_branch()` membuat `Branch`; `Sale.add_item()` dan `OrderRequest.add_item()` membuat `SaleItem` |
 
-- **Asosiasi** (`Sale` → `Customer`/`PaymentMethod`): sebuah transaksi *menggunakan/mengacu* pada pelanggan dan metode pembayaran, tetapi tidak memiliki siklus hidup mereka; pelanggan tetap ada walau transaksi dihapus.
-- **Agregasi** (`Store` → `Product`/`Staff`): objek `Product` dan `Staff` dibuat **di luar** `Store` (di `main.py`) lalu didaftarkan. Jika `Store` dihapus, produk dan staff tetap ada (siklus hidup mandiri), sehingga dipilih agregasi.
-- **Komposisi** (`Sale` → `SaleItem`): `SaleItem` dibuat **di dalam** `Sale.add_item()` dan tidak bermakna tanpa `Sale` induknya (nota). Jika `Sale` hilang, item ikut hilang, sehingga dipilih komposisi, bukan agregasi.
-
-```python
-# Agregasi (main.py): dibuat di luar, lalu dimasukkan ke Store
-prod1 = Product("P001", "Mechanical Keyboard", 750000, 10, "Peripheral")
-my_store.add_product(prod1)
-
-# Komposisi (models/sale.py): SaleItem dibuat di dalam Sale
-new_item = SaleItem(product, quantity)
-self._items.append(new_item)
-
-# Asosiasi (models/sale.py)
-self.customer = customer
-self.payment = payment      # di Sale.checkout()
-```
-
----
+- **Asosiasi:** `Sale` hanya *mengacu* ke customer, admin pemroses, dan metode pembayaran; objek-objek itu hidup mandiri dan dipakai bersama banyak transaksi.
+- **Agregasi (Branch → Product/Admin):** produk dan admin dibuat di luar cabang lalu didaftarkan. Jika cabang dihapus, objek `Admin` dan `Product` tetap ada dan bisa dipindahkan (admin bisa dipindah cabang oleh super admin), sehingga hubungannya "memiliki" yang longgar.
+- **Komposisi:** `Branch` tidak bermakna tanpa `Store`, dan dibuat hanya lewat `Store.add_branch()`. `SaleItem` hanya ada sebagai baris dari satu `Sale`/`OrderRequest` dan dibuat di dalamnya. Keduanya ikut hilang bersama induknya, maka dipilih komposisi, bukan agregasi.
 
 ## 2. Abstraksi (Abstract Base Class)
 
-**Abstract class:** `PaymentMethod(ABC)` di `models/payment.py`.
+Ada dua abstract class:
 
-| Bagian | Isi |
-|---|---|
-| **Abstract method (3)** | `validate()`, `calculate_fee()`, `execute()` — diberi `@abstractmethod` |
-| **Method konkret** | `process(amount)` (alur validasi → eksekusi → status, sama untuk semua subclass, seperti `jalankan()` di materi), `get_total_charge()`, `describe()`, `__str__` |
-| **Subclass (3)** | `CashPayment`, `BankTransferPayment`, `EWalletPayment` — ketiganya mengimplementasikan seluruh abstract method |
+| Abstract class | Abstract method | Method konkret | Subclass |
+|---|---|---|---|
+| `PaymentMethod(ABC)` | `validate()`, `calculate_fee()`, `execute()` | `process(amount)` (alur sama untuk semua, seperti `jalankan()` di materi), `get_total_charge()`, `describe()`, `__str__` | `CashPayment`, `BankTransferPayment`, `EWalletPayment` |
+| `Person(ABC)` | `get_role()`, `get_permissions()`, `can_see(notification)` | `set_password()`, `verify_password()`, `update_profile()`, `show_person_info()` | `Customer`, `Admin` → `SuperAdmin` |
 
-Konsep inheritance tetap dipakai: setiap subclass memanggil `super().__init__(payer_name)`, punya atribut unik (`cash_given`, `bank_name`, `provider`, ...), serta atribut protected/private:
+Inheritance dipertahankan: semua subclass memakai `super().__init__(...)`, punya atribut unik, dan atribut **protected** (`_name`, `_amount`, `_change`) serta **private** (`__password`, `__gmail`, `__reference_code`, `__account_number`, `__balance`, `__total_spending`).
 
-| Level | Contoh |
-|---|---|
-| Protected | `_payer_name`, `_amount` (di parent), `_change` (`CashPayment`) |
-| Private | `__reference_code` (parent), `__account_number` (`BankTransferPayment`), `__balance` (`EWalletPayment`) |
-
-```python
-class PaymentMethod(ABC):
-    @abstractmethod
-    def validate(self): ...
-    @abstractmethod
-    def calculate_fee(self): ...
-    @abstractmethod
-    def execute(self): ...
-
-    def process(self, amount):          # method konkret bersama
-        self._amount = amount
-        if not self.validate():
-            return False
-        self.execute()
-        ...
-```
-
-**Bukti abstract class tidak bisa diinstansiasi** (menu `OOP Testing` → `8`):
+**Bukti abstract class tidak bisa diinstansiasi** (menu `OOP Testing → 3`):
 
 ```python
 try:
-    PaymentMethod("Test")
+    PaymentMethod("x")
 except TypeError as e:
-    print(f"TypeError: {e}")
-# TypeError: Can't instantiate abstract class PaymentMethod without an implementation
-#            for abstract methods 'calculate_fee', 'execute', 'validate'
+    print(e)
+# Can't instantiate abstract class PaymentMethod without an implementation
+# for abstract methods 'calculate_fee', 'execute', 'validate'
 ```
-
-Screenshot lengkap ada di bagian [Screenshot Output](#screenshot-output).
-
----
 
 ## 3. Polimorfisme
 
-### a. Polimorfisme via Pewarisan
-`calculate_fee()` (dan `describe()`, `validate()`, `execute()`) di-override oleh `CashPayment` (fee 0), `BankTransferPayment` (fee tetap Rp2.500), dan `EWalletPayment` (fee 1,5%). Dipanggil lewat satu loop:
-
-```python
-for payment in payments:     # Cash, BankTransfer, EWallet
-    print(payment.method_name, payment.calculate_fee(), payment.describe())
-```
-
-Pola yang sama dipakai di `Sale.checkout()`: `payment.process(self.total)` tanpa mengecek jenis pembayaran. `Person.show_person_info()` dari posttest sebelumnya juga di-override oleh `Customer` dan `Staff`.
-
-### b. Duck Typing
-`EmailNotifier`, `SMSNotifier`, dan `WhatsAppNotifier` (`models/notifier.py`) **tidak berhubungan lewat pewarisan**, tetapi sama-sama punya `send(message)`. Semuanya dipanggil lewat satu fungsi:
-
-```python
-def notify_customer(channels, message):
-    for channel in channels:
-        channel.send(message)
-```
-
-Fungsi ini dipakai setelah pembayaran berhasil (`menus/payment_prompt.py → send_confirmation`).
-
-### c. Operator Overloading
-
-| Kelas | Magic method | Fungsi |
-|---|---|---|
-| `Product` | `__lt__`, `__gt__` | membandingkan harga; `sorted()`, `min()` bekerja otomatis (`Store.show_products_by_price()`) |
-| `PaymentMethod` | `__str__`, `__lt__`, `__gt__` | tampilan teks & perbandingan biaya (fee) |
-| `Sale` | `__len__` | `len(sale)` = jumlah item |
-
-### d. Menghindari Anti-Pattern
-Tidak ada rantai `if/elif` yang mengecek `type()` atau string jenis. Rantai `if/elif` berdasarkan string `membership_tier` pada `sale_menu.py` dari posttest sebelumnya **sudah dihapus**; diskon kini ditentukan oleh objek `Customer` sendiri lewat `customer.discount_percentage`. Menu pembayaran memakai tabel `PAYMENT_OPTIONS` (dictionary), bukan `if/elif`.
-
----
+- **Via pewarisan:** `get_permissions()`, `can_see()`, dan `accessible_branches()` di-override oleh `Customer`, `Admin`, dan `SuperAdmin` (Admin hanya cabangnya, SuperAdmin semua cabang). `calculate_fee()` di-override oleh tiga metode pembayaran (fee Rp0, Rp2.500, 1,5%). Dipanggil lewat satu loop (lihat menu testing 4) dan di `Sale.checkout()` serta `build_menu()`.
+- **Duck typing:** `EmailNotifier`, `SMSNotifier`, `WhatsAppNotifier` tidak berpewarisan tetapi sama-sama punya `send()`, dipanggil lewat `notify_customer(channels, message)`. Dipakai setelah pembayaran divalidasi.
+- **Operator overloading:** `Product.__lt__/__gt__` (`sorted()`, `min()` bekerja, dipakai di *View Products → sort by price*); `Sale.__len__/__lt__/__gt__/__str__`; `OrderRequest.__len__/__str__`; `PaymentMethod.__str__/__lt__/__gt__`; `Branch.__len__`, `Store.__len__`.
+- **Tanpa anti-pattern:** tidak ada `if/elif` yang mengecek `type()` atau string jenis/role. Menu dibangun dari `user.get_permissions()`, tier customer dari tabel `Customer.TIERS`, pilihan pembayaran dari tabel `PAYMENT_OPTIONS`.
 
 ## Nilai Plus: Prinsip SOLID
 
 | Prinsip | Penerapan |
 |---|---|
-| **DIP** (Dependency Inversion) | `Sale.checkout(payment)` bergantung pada abstraksi `PaymentMethod`, bukan kelas konkret seperti `CashPayment`. Objek pembayaran disuntikkan dari luar (dependency injection) |
-| **OCP** (Open/Closed) | Metode pembayaran baru cukup dibuat sebagai subclass `PaymentMethod` (dan satu baris di `PAYMENT_OPTIONS`), tanpa mengubah `Sale`, `Staff`, maupun `PaymentMethod`. Dibuktikan di menu `OOP Testing → 10` dengan kelas `VoucherPayment` yang dibuat tanpa memodifikasi kode lama |
+| **DIP** | `Sale.checkout(payment)` bergantung pada abstraksi `PaymentMethod`, bukan kelas konkret; objek pembayaran disuntikkan dari luar |
+| **OCP** | Metode pembayaran baru = subclass baru (+ satu baris di `PAYMENT_OPTIONS`) tanpa mengubah `Sale`/`OrderService`; role atau aksi baru = tambah permission dan satu baris registry menu. Dibuktikan oleh `VoucherPayment` di menu testing 5 |
+| **SRP** | Penyimpanan data (`AppData`) dipisah dari alur bisnis (`OrderService`) dan dari tampilan (`menus/`) |
 
 ---
 
 ## Cara Menjalankan
 
 ```bash
-pip install -r requirements.txt
 python main.py
 ```
 
-Akun default: Staff `admin` / `admin123`, Customer `rina_m` / `password1`.
+| Role | Username | Password |
+|---|---|---|
+| Super Admin | `superadmin` | `super123` |
+| Admin Samarinda | `admin_smr` | `admin123` |
+| Admin Balikpapan | `admin_bpn` | `admin123` |
+| Customer | `rina_m` / `daffa_p` / `nadia_putri` | `password1` / `password2` / `password3` |
 
-Menu `3. OOP Testing`:
+Skenario cepat: login `rina_m` → *Shop* → kirim request → logout → login `admin_smr` → *Notifications* / *Customer Requests* → buat pesanan & bayar → *History / Log*.
 
-| Menu | Yang dibuktikan |
-|---|---|
-| 1–7 | Pengujian posttest sebelumnya (inheritance, encapsulation, class/static method, asosiasi, agregasi, komposisi) |
-| 8 | **Abstraksi**: abstract class tidak bisa diinstansiasi, subclass tidak lengkap ditolak |
-| 9 | **Polimorfisme**: pewarisan, duck typing, operator overloading |
-| 10 | **SOLID**: OCP & DIP dengan `VoucherPayment` |
-| 11 | Run all tests |
+Data disimpan di memori, jadi kembali ke data awal tiap program dijalankan.
 
-Pembayaran juga dapat dicoba lewat alur nyata: login → *Process New Sale* (staff) atau *Buy Product* (customer).
+Menu `OOP Testing`: 1 Encapsulation, 2 Relasi (asosiasi/agregasi/komposisi), 3 Abstraksi, 4 Polimorfisme, 5 SOLID, 6 Run all.
 
 ---
 
 ## Screenshot Output
 
-**Abstraksi — abstract class tidak bisa diinstansiasi (menu 8)**
+**Customer mengirim request**
 
-![Test Abstraction](assets/test_abstraction.png)
+![Customer request](assets/flow_1_customer_request.png)
 
-**Polimorfisme — pewarisan, duck typing, operator overloading (menu 9)**
+**Admin memproses request, validasi pembayaran, pesanan dibuat**
 
-![Test Polymorphism](assets/test_polymorphism.png)
+![Admin order](assets/flow_3_admin_order_payment.png)
 
-**SOLID — OCP & DIP (menu 10)**
+**History / log**
 
-![Test SOLID](assets/test_solid.png)
+![Log](assets/flow_4_history_log.png)
+
+**Abstraksi: abstract class tidak bisa diinstansiasi**
+
+![Abstraction](assets/test_abstraction.png)
+
+**Polimorfisme (pewarisan, duck typing, operator overloading)**
+
+![Polymorphism](assets/test_polymorphism.png)
+
+**Relasi UML dibuktikan di kode**
+
+![Relations](assets/test_relations.png)
+
+**SOLID (OCP & DIP)**
+
+![SOLID](assets/test_solid.png)
