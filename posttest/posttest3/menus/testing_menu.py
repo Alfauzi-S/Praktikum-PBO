@@ -36,8 +36,9 @@ def testing_menu(app):
             test(app)
             pause()
         else:
+            ui.clear()
             for label, test in tests:
-                ui.screen(f"Test: {label}", "Main menu > OOP Testing > Run all")
+                ui.screen(f"Test: {label}", "Main menu > OOP Testing > Run all", clear_first=False)
                 test(app)
                 print()
             pause()

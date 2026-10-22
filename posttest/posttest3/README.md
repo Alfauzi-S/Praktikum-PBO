@@ -128,6 +128,7 @@ Antarmuka dibuat berwarna, berbingkai, dan informatif, tetapi **tetap hanya mema
 
 Catatan teknis tampilan:
 
+- **Layar dibersihkan otomatis** di setiap halaman (`ui.screen()` memanggil `ui.clear()`), sehingga tampilan selalu rapi dan tidak menumpuk. Di terminal asli dipakai perintah `clear`/`cls`; di konsol IDE yang bukan terminal (perintah clear tidak bekerja) layar didorong dengan baris kosong. Pesan hasil aksi selalu diikuti `ENTER to continue` agar sempat dibaca sebelum layar berganti. Jalankan dengan `NO_CLEAR=1` untuk mematikannya.
 - Warna otomatis **mati** jika output bukan terminal (misalnya dialihkan ke file) atau variabel `NO_COLOR` diisi; `FORCE_COLOR=1` memaksa warna tetap menyala. `FORCE_ASCII=1` mengganti karakter kotak/simbol dengan ASCII untuk terminal lama.
 - Lebar layar tetap 76 kolom agar rapi di terminal standar. Tabel yang terlalu lebar dipersempit otomatis dengan memangkas kolom teks (diakhiri `…`), sedangkan kolom angka/uang dijaga utuh.
 - Nominal selalu ditulis gaya Indonesia lewat `ui.rupiah()`, misalnya `Rp 1.500.000`.
@@ -1038,6 +1039,6 @@ Menu pengujian memakai objek sementara sehingga data utama tidak berubah.
 - Data disimpan **di memori** (`AppData`), sehingga kembali ke data awal setiap program dijalankan ulang. Ini disengaja agar fokus pada konsep OOP.
 - Status "sudah dibaca" pada notifikasi dipakai bersama oleh semua yang bisa melihat notifikasi itu (admin cabang dan super admin).
 - Password disimpan apa adanya (tanpa hashing) karena program ini hanya simulasi pembelajaran.
-- Tampilan memakai kode warna ANSI dan karakter kotak Unicode. Bila terminal lama menampilkannya salah, jalankan dengan `NO_COLOR=1` (tanpa warna) dan/atau `FORCE_ASCII=1` (simbol ASCII).
+- Tampilan memakai kode warna ANSI dan karakter kotak Unicode. Bila terminal lama menampilkannya salah, jalankan dengan `NO_COLOR=1` (tanpa warna) dan/atau `FORCE_ASCII=1` (simbol ASCII). Jika dijalankan dari konsol IDE yang tidak berwarna, `FORCE_COLOR=1` memaksa warna menyala.
 - Tabel yang terlalu lebar untuk 76 kolom dipersingkat otomatis; detail lengkap selalu tersedia di layar detail (misalnya detail request atau struk).
 - `seed.py` membuat data awal lewat `OrderService` yang sama dengan aplikasi (outputnya disembunyikan), sehingga riwayat awal konsisten dengan alur sebenarnya.

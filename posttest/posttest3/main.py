@@ -13,6 +13,7 @@ from utils import ui, pause, read_menu_choice
 def main():
     app = build_app()
     while True:
+        ui.clear()
         ui.banner("COMPUTER SALES MANAGEMENT SYSTEM", "Toko perangkat & aksesori komputer")
         ui.panel("STORE", ui.kv_lines([
             ("Name", ui.c(app.store.name, "bold")),

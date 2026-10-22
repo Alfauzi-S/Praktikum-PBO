@@ -9,8 +9,7 @@ CANCEL_WORD = "/q"
 
 
 def clear_screen():
-    if sys.stdin.isatty() and sys.stdout.isatty():
-        os.system("cls" if os.name == "nt" else "clear")
+    ui.clear()
 
 
 def pause(message="Press ENTER to continue"):

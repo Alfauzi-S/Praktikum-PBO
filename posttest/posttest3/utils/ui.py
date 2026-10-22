@@ -179,8 +179,31 @@ def banner(title, subtitle="", color="cyan"):
     print(c(DOUBLE["bl"] + DOUBLE["h"] * inner + DOUBLE["br"], color))
 
 
-def screen(title, crumb=""):
-    """Kepala layar standar: breadcrumb (redup) + judul."""
+def clear():
+    """Bersihkan layar agar tiap halaman tampil rapi.
+
+    - Terminal asli (tty): perintah clear/cls + kode ANSI (termasuk scrollback).
+    - Konsol IDE / output bukan tty: perintah clear tidak berfungsi, jadi layar
+      didorong dengan baris kosong.
+    - NO_CLEAR=1 mematikan pembersihan (berguna untuk merekam output).
+    """
+    if os.environ.get("NO_CLEAR"):
+        return
+    try:
+        if sys.stdout.isatty():
+            os.system("cls" if os.name == "nt" else "clear")
+            sys.stdout.write("\033[3J\033[H")      # hapus scrollback + kursor ke kiri atas
+            sys.stdout.flush()
+        else:
+            print("\n" * 40)
+    except Exception:                               # noqa: BLE001 - jangan sampai clear membuat program berhenti
+        print("\n" * 40)
+
+
+def screen(title, crumb="", clear_first=True):
+    """Kepala layar standar: bersihkan layar, lalu breadcrumb (redup) + judul."""
+    if clear_first:
+        clear()
     if crumb:
         print(c(f"  {crumb}", "dim"))
     print(c(f"  {SYM['bar']} ", "bold", "cyan") + c(title.upper(), "bold"))
