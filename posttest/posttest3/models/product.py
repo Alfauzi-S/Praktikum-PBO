@@ -1,4 +1,8 @@
+from utils import ui
+
+
 class Product:
+    LOW_STOCK = 3
     VALID_CATEGORIES = ["Peripheral", "Laptop", "PC", "Monitor", "Aksesoris", "Lainnya"]
 
     def __init__(self, id_product, name, price, stock, category):
@@ -28,9 +32,7 @@ class Product:
 
     @category.setter
     def category(self, value):
-        if value not in Product.VALID_CATEGORIES:
-            raise ValueError(f"Invalid category! Choose: {', '.join(Product.VALID_CATEGORIES)}")
-        self._category = value
+        self._category = Product.check_category(value)
 
     @property
     def price(self):
@@ -38,9 +40,7 @@ class Product:
 
     @price.setter
     def price(self, value):
-        if not isinstance(value, (int, float)) or value <= 0:
-            raise ValueError("Price must be a number greater than 0!")
-        self._price = float(value)
+        self._price = Product.check_price(value)
 
     @property
     def stock(self):
@@ -63,9 +63,25 @@ class Product:
         self.stock -= qty
         return True
 
+    @property
+    def is_low_stock(self):
+        return self._stock <= Product.LOW_STOCK
+
+    @staticmethod
+    def check_price(value):
+        if not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError("Price must be a number greater than 0!")
+        return float(value)
+
+    @staticmethod
+    def check_category(value):
+        if value not in Product.VALID_CATEGORIES:
+            raise ValueError(f"Invalid category! Choose: {', '.join(Product.VALID_CATEGORIES)}")
+        return value
+
     # ---------- Operator overloading ----------
     def __str__(self):
-        return f"[{self.id_product}] {self._name} - Rp{self._price:,.0f} (Stock: {self._stock})"
+        return f"[{self.id_product}] {self._name} - {ui.rupiah(self._price)} (Stock: {self._stock})"
 
     def __lt__(self, other):
         return self._price < other._price

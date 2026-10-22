@@ -3,6 +3,12 @@
 Ketiga kelas di bawah TIDAK saling berhubungan lewat pewarisan, tetapi sama-sama
 punya method send(message). Ini adalah contoh Duck Typing.
 """
+from utils import ui
+
+
+def _line(tag, target, message, color):
+    arrow = ui.SYM["arrow"]
+    print(f"  {ui.c(f'{tag:<9}', 'bold', color)} {ui.c(arrow + ' ' + target, 'dim')}  {message}")
 
 
 class EmailNotifier:
@@ -10,7 +16,7 @@ class EmailNotifier:
         self.address = address
 
     def send(self, message):
-        print(f"  [EMAIL -> {self.address}] {message}")
+        _line("EMAIL", self.address, message, "cyan")
 
 
 class SMSNotifier:
@@ -18,7 +24,7 @@ class SMSNotifier:
         self.phone = phone
 
     def send(self, message):
-        print(f"  [SMS -> {self.phone}] {message}")
+        _line("SMS", self.phone, message, "magenta")
 
 
 class WhatsAppNotifier:
@@ -26,7 +32,7 @@ class WhatsAppNotifier:
         self.phone = phone
 
     def send(self, message):
-        print(f"  [WHATSAPP -> {self.phone}] {message}")
+        _line("WHATSAPP", self.phone, message, "green")
 
 
 def notify_customer(channels, message):

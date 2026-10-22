@@ -1,5 +1,6 @@
 from datetime import datetime
 from models.sale_item import SaleItem
+from utils import ui
 
 
 class Sale:
@@ -34,7 +35,7 @@ class Sale:
     def add_item(self, product, quantity):
         """Membuat SaleItem DI DALAM Sale (komposisi) dan mengurangi stok."""
         if quantity <= 0 or quantity > product.stock:
-            print(f"[!] Not enough stock for {product.name}! Available: {product.stock}")
+            ui.warn(f"Not enough stock for {product.name}! Available: {product.stock}")
             return False
         existing = next((i for i in self._items if i.product is product), None)
         if existing:
@@ -49,25 +50,32 @@ class Sale:
             raise ValueError("Discount must be between 0 and 100!")
         self.discount_percentage = percentage
 
+    @classmethod
+    def estimate(cls, subtotal, discount_percentage):
+        """Rincian harga: satu rumus dipakai nota, keranjang, dan pratinjau admin."""
+        discount = subtotal * discount_percentage / 100
+        tax = (subtotal - discount) * cls.tax / 100
+        return {"subtotal": subtotal, "discount": discount, "tax": tax, "total": subtotal - discount + tax}
+
     @property
     def discount_amount(self):
-        return self.subtotal * self.discount_percentage / 100
+        return Sale.estimate(self.subtotal, self.discount_percentage)["discount"]
 
     @property
     def tax_amount(self):
-        return (self.subtotal - self.discount_amount) * Sale.tax / 100
+        return Sale.estimate(self.subtotal, self.discount_percentage)["tax"]
 
     def calculate_total(self):
-        self.__total = self.subtotal - self.discount_amount + self.tax_amount
+        self.__total = Sale.estimate(self.subtotal, self.discount_percentage)["total"]
         return self.__total
 
     def checkout(self, payment):
         """Bayar lalu selesaikan. Hanya bergantung pada abstraksi PaymentMethod (DIP)."""
         if not self._items:
-            print("[!] Cannot process an empty sale!")
+            ui.err("Cannot process an empty sale!")
             return False
         if self.is_completed:
-            print("[!] This sale has already been processed!")
+            ui.err("This sale has already been processed!")
             return False
 
         self.calculate_total()
@@ -88,27 +96,37 @@ class Sale:
         self._items = []
 
     def show_receipt(self):
-        print("\n" + "=" * 50)
-        print("              SALES RECEIPT")
-        print("=" * 50)
-        print(f"Order ID    : {self.id_sale}")
-        print(f"Branch      : {self.branch.name}")
-        print(f"Customer    : {self.customer.name} ({self.customer.membership_tier})")
-        print(f"Handled by  : {self.handled_by.name}")
-        print(f"Date        : {self.created_at:%Y-%m-%d %H:%M:%S}")
-        print("-" * 50)
+        """Struk bergaya kotak."""
+        head = ui.kv_lines([
+            ("Order ID", ui.c(self.id_sale, "bold")),
+            ("Date", f"{self.created_at:%Y-%m-%d %H:%M}"),
+            ("Branch", self.branch.name),
+            ("Customer", f"{self.customer.name} ({ui.tier_badge(self.customer.membership_tier)})"),
+            ("Handled by", self.handled_by.name),
+        ], 11)
+        lines = head + [ui.c(ui.SINGLE["h"] * (ui.W - 6), "gray")]
         for item in self._items:
-            print(f"  {item}")
-        print("-" * 50)
-        print(f"Subtotal    : Rp{self.subtotal:,.0f}")
+            left = f"{item.product_name} x{item.quantity}"
+            right = ui.rupiah(item.subtotal)
+            lines.append(left + " " * max(1, ui.W - 6 - ui.vlen(left) - ui.vlen(right)) + right)
+        lines.append(ui.c(ui.SINGLE["h"] * (ui.W - 6), "gray"))
+
+        def money(label, value, style=None):
+            text = ui.rupiah(value)
+            gap = " " * max(1, ui.W - 6 - ui.vlen(label) - ui.vlen(text))
+            return label + gap + (ui.c(text, *style) if style else text)
+
+        lines.append(money("Subtotal", self.subtotal))
         if self.discount_percentage:
-            print(f"Discount    : {self.discount_percentage}% (-Rp{self.discount_amount:,.0f})")
-        print(f"Tax ({Sale.tax}%)   : +Rp{self.tax_amount:,.0f}")
-        print("=" * 50)
-        print(f"TOTAL       : Rp{self.total:,.0f}")
+            lines.append(money(f"Discount {self.discount_percentage}%", -self.discount_amount, ("green",)))
+        lines.append(money(f"Tax {Sale.tax}%", self.tax_amount))
+        lines.append(money(ui.c("TOTAL", "bold"), self.total, ("bold", "green")))
         if self.payment:
-            print(f"Payment     : {self.payment} | Ref {self.payment.reference_code}")
-        print("=" * 50)
+            lines.append(ui.c(ui.SINGLE["h"] * (ui.W - 6), "gray"))
+            lines.append(f"Paid via {self.payment.describe()}")
+            lines.append(ui.c(f"Ref {self.payment.reference_code}", "dim"))
+        print()
+        ui.panel("SALES RECEIPT", lines, "green")
 
     # ---------- Operator overloading ----------
     def __len__(self):
@@ -121,7 +139,7 @@ class Sale:
         return self.total > other.total
 
     def __str__(self):
-        return f"{self.id_sale} | {self.customer.name} | {self.branch.name} | Rp{self.total:,.0f}"
+        return f"{self.id_sale} | {self.customer.name} | {self.branch.name} | {ui.rupiah(self.total)}"
 
     @classmethod
     def change_tax(cls, new_tax):

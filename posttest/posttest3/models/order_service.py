@@ -1,3 +1,4 @@
+from utils import ui
 from models.sale import Sale
 from models.order_request import OrderRequest
 from models.activity_log import ActivityLog
@@ -21,7 +22,7 @@ class OrderService:
         self.app.requests.append(request)
         self.app.notify(
             f"New request {request.id_request} from {customer.name} "
-            f"({len(request)} item, est. Rp{request.estimated_total:,.0f})",
+            f"({len(request)} item, est. {ui.rupiah(request.estimated_total)})",
             branch=branch, request=request)
         self.app.log.add(ActivityLog.REQUEST, customer.name,
                          f"Created request {request.id_request}", branch, request.estimated_total)
@@ -37,7 +38,7 @@ class OrderService:
             return None
         request.mark_completed(sale, admin)
         self.app.notify(f"Your request {request.id_request} is completed as order {sale.id_sale}. "
-                        f"Total Rp{sale.total:,.0f}", customer=request.customer, request=request)
+                        f"Total {ui.rupiah(sale.total)}", customer=request.customer, request=request)
         return sale
 
     def reject_request(self, request, admin, reason):
@@ -54,7 +55,7 @@ class OrderService:
         sale = self._build_sale(admin, customer, branch, items)
         if sale is None or not self._pay(sale, payment):
             return None
-        self.app.notify(f"Order {sale.id_sale} created for you. Total Rp{sale.total:,.0f}", customer=customer)
+        self.app.notify(f"Order {sale.id_sale} created for you. Total {ui.rupiah(sale.total)}", customer=customer)
         return sale
 
     # ---------- internal ----------
@@ -76,5 +77,5 @@ class OrderService:
                          f"Order {sale.id_sale} for {sale.customer.name} paid via {payment.method_name}",
                          sale.branch, sale.total)
         notify_customer(build_channels(sale.customer),
-                        f"Payment for {sale.id_sale} (Rp{sale.total:,.0f}) validated. Thank you!")
+                        f"Payment for {sale.id_sale} ({ui.rupiah(sale.total)}) validated. Thank you!")
         return True

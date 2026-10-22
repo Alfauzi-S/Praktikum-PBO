@@ -11,7 +11,7 @@
 
 1. [Deskripsi Program](#1-deskripsi-program)
 2. [Checklist Ketentuan Posttest](#2-checklist-ketentuan-posttest)
-3. [Role, Hak Akses, dan Alur Belanja](#3-role-hak-akses-dan-alur-belanja)
+3. [Role, Hak Akses, Alur Belanja, dan Tampilan Terminal](#3-role-hak-akses-alur-belanja-dan-tampilan-terminal)
 4. [Struktur Proyek](#4-struktur-proyek)
 5. [Class Diagram & Relasi UML](#5-class-diagram--relasi-uml)
 6. [Abstraksi (Abstract Base Class)](#6-abstraksi-abstract-base-class)
@@ -76,7 +76,7 @@ Tabel ini memetakan setiap ketentuan soal ke lokasi implementasinya di kode, sup
 
 ---
 
-## 3. Role, Hak Akses, dan Alur Belanja
+## 3. Role, Hak Akses, Alur Belanja, dan Tampilan Terminal
 
 ### 3.1 Hak akses tiap role
 
@@ -100,12 +100,37 @@ Di kode, tabel ini **bukan** ditulis sebagai rantai `if role == ...`. Setiap kel
 
 ### 3.2 Alur belanja
 
-1. **Customer memilih barang.** Menu *Shop* → pilih cabang → tambah barang ke keranjang → *Send request*. Kode: `menus/customer_actions.py → shop()` memanggil `OrderService.submit_request()`.
-2. **Notifikasi untuk admin.** `submit_request()` membuat objek `OrderRequest` (status `PENDING`) dan `Notification` yang ditujukan ke cabang tersebut.
-3. **Admin membuat pesanan dan memvalidasi pembayaran.** Menu *Customer Requests* → pilih request → *Create order & validate payment* → pilih metode dan isi data pembayaran. `OrderService.fulfill_request()` membuat `Sale`, memanggil `Sale.checkout(payment)` yang memvalidasi pembayaran lewat `PaymentMethod.process()`. Admin juga bisa **menolak** request dengan alasan.
-4. **Masuk ke log/history.** Hasilnya dicatat di `ActivityLog`; `Sale` disimpan di daftar pesanan; customer menerima notifikasi (dalam aplikasi dan Email/SMS).
+1. **Customer memilih barang.** Menu *Shop* → pilih cabang → tambah barang ke keranjang satu layar (perintah: nomor/ID, `/cari`, `R`, `C`, `S`, `Q`) → *Send request*. Kode: `menus/customer_actions.py → shop()` memakai `menus/cart.py → build_cart()` lalu memanggil `OrderService.submit_request()`.
+2. **Notifikasi untuk admin.** `submit_request()` membuat objek `OrderRequest` (status `PENDING`) dan `Notification` yang ditujukan ke cabang tersebut. Di dashboard admin, angka *Pending* naik dan menu *Notifications* / *Customer Requests* menampilkan lencana baru.
+3. **Admin membuat pesanan dan memvalidasi pembayaran.** Menu *Customer Requests* (atau langsung dari *Notifications*) → pilih request → tabel *Stock check* → *Create order & validate payment* → pilih metode dan isi data pembayaran. `OrderService.fulfill_request()` membuat `Sale`, memanggil `Sale.checkout(payment)` yang memvalidasi pembayaran lewat `PaymentMethod.process()`. Jika gagal, admin diberi alasan dan boleh mencoba metode lain. Admin juga bisa **menolak** request dengan alasan.
+4. **Masuk ke log/history.** Hasilnya dicatat di `ActivityLog`; `Sale` disimpan di daftar pesanan; customer menerima notifikasi (dalam aplikasi dan Email/SMS) dan melihat statusnya berubah menjadi `COMPLETED` di *My Orders / Status*.
 
 Penjelasan alur sampai ke baris kode ada di [bagian 9](#9-alur-program-langkah-demi-langkah-di-dalam-kode).
+
+### 3.3 Tampilan terminal & kemudahan penggunaan
+
+Antarmuka dibuat berwarna, berbingkai, dan informatif, tetapi **tetap hanya memakai standard library** (kode warna ANSI + karakter kotak Unicode). Semua komponen tampilan ada di satu tempat, `utils/ui.py`, sehingga tampilan konsisten di semua menu.
+
+| Fitur | Penjelasan | Dilihat oleh |
+|---|---|---|
+| **Dashboard per role** | Setelah login langsung tampil ringkasan: customer melihat tier, progres menuju tier berikutnya (*progress bar*), poin, total belanja, dan 3 aktivitas terbaru; admin melihat kartu statistik (request menunggu, pesanan & omzet hari ini, stok menipis) dan daftar *Needs your attention*; super admin ditambah tabel ringkasan semua cabang | semua role |
+| **Menu dengan lencana (*badge*)** | Menu menampilkan penanda langsung di sebelah kanan, misalnya `4 Notifications ... 1 new`, `2 Customer Requests ... 2 pending`, `4 Manage Products ... 1 low` | semua role |
+| **Breadcrumb** | Setiap layar menampilkan posisi (`Dashboard > Requests > Process`) sehingga pengguna tidak tersesat | semua role |
+| **Keranjang satu layar** | Produk, isi keranjang, dan estimasi harga (subtotal, diskon member, pajak, total) tampil bersamaan dan ikut berubah saat barang ditambah. Perintah: *nomor/ID* = tambah, `/kata` = cari, `R` = hapus, `C` = kosongkan, `S` = kirim, `Q` = batal | customer, admin (walk-in) |
+| **Tampilan status berurutan** | Detail request menampilkan alur `Requested ─ Reviewed by admin ─ Completed` dan waktu relatif (`just now`, `5 min ago`, `2 h ago`) | customer |
+| **Notifikasi → langsung diproses** | Dari layar notifikasi, admin bisa membuka request yang masih menunggu tanpa pindah-pindah menu | admin |
+| **Cek stok otomatis** | Sebelum membuat pesanan, tabel *Stock check* menunjukkan stok cukup atau tidak (`✔ OK` / `✖ Not enough`) | admin |
+| **Ulang pembayaran** | Jika pembayaran gagal (misalnya uang kurang), muncul alasan jelas, stok dikembalikan, dan admin ditawari mencoba metode lain tanpa mengulang dari awal | admin |
+| **Formulir bervalidasi per kolom** | Setiap isian diperiksa saat itu juga (nomor HP 10–13 digit, email, password minimal 6 karakter, dst.); salah isi hanya mengulang kolom itu. Nilai lama ditampilkan di `[ ]` dan cukup ENTER untuk mempertahankannya | semua role |
+| **`/q` untuk membatalkan** | Pada formulir mana pun, ketik `/q` untuk kembali tanpa menyimpan | semua role |
+| **Log berbentuk *feed*** | Activity log tampil kronologis dengan lencana warna (`REQUEST`, `ORDER`, `REJECTED`, ...), nominal, dan pelaku | admin, super admin |
+| **Akun demo di layar login** | Daftar akun uji coba tampil di layar login, dan login dibatasi 3 kali percobaan | semua |
+
+Catatan teknis tampilan:
+
+- Warna otomatis **mati** jika output bukan terminal (misalnya dialihkan ke file) atau variabel `NO_COLOR` diisi; `FORCE_COLOR=1` memaksa warna tetap menyala. `FORCE_ASCII=1` mengganti karakter kotak/simbol dengan ASCII untuk terminal lama.
+- Lebar layar tetap 76 kolom agar rapi di terminal standar. Tabel yang terlalu lebar dipersempit otomatis dengan memangkas kolom teks (diakhiri `…`), sedangkan kolom angka/uang dijaga utuh.
+- Nominal selalu ditulis gaya Indonesia lewat `ui.rupiah()`, misalnya `Rp 1.500.000`.
 
 ---
 
@@ -138,10 +163,14 @@ posttest3/
 │   ├── admin_actions.py         # aksi admin
 │   ├── superadmin_actions.py    # aksi super admin
 │   ├── profile_actions.py       # profil & akun (dipakai semua role)
-│   ├── payment_prompt.py        # pilihan metode pembayaran
+│   ├── payment_prompt.py        # pilihan metode pembayaran (tabel PAYMENT_OPTIONS)
 │   ├── auth.py                  # login & registrasi
+│   ├── cart.py                  # keranjang belanja satu layar (customer & admin walk-in)
+│   ├── views.py                 # potongan tampilan bersama (tabel produk/request/pesanan, rincian harga)
 │   └── testing_menu.py          # menu OOP Testing
-├── utils/helper.py              # fungsi bantu input/output
+├── utils/
+│   ├── ui.py                    # komponen tampilan: warna, kotak, tabel, kartu statistik, badge, feed
+│   └── helper.py                # input bervalidasi: ask_valid, run_form, choose, confirm, pause
 └── assets/                      # class diagram & screenshot
 ```
 
@@ -315,6 +344,7 @@ class PaymentMethod(ABC):
     def __init__(self, payer_name):
         self._payer_name = payer_name.strip()      # Protected: dipakai subclass
         self._amount = 0                           # Protected: diisi saat process()
+        self._notes = []                           # Protected: catatan hasil execute()
         self.__reference_code = ""                 # Private: dibuat otomatis
         self.is_paid = False
 
@@ -335,32 +365,36 @@ class PaymentMethod(ABC):
     def get_total_charge(self):
         return self._amount + self.calculate_fee()
 
+    def failure_reason(self):
+        """Alasan gagal; di-override subclass agar pesannya spesifik."""
+        return "Payment data is invalid."
+
     def process(self, amount):
         """Alur yang sama untuk semua metode: validasi -> eksekusi -> status."""
         ...
         self._amount = amount
-        if not self.validate():          # diserahkan ke subclass
-            self.is_paid = False
-            return False
-        self.execute()                   # diserahkan ke subclass
-        self._generate_reference()
-        self.is_paid = True
-        return True
+        valid = self.validate()              # diserahkan ke subclass
+        if valid:
+            self.execute()                   # diserahkan ke subclass
+            self._generate_reference()
+        self.is_paid = valid
+        self._show_result(valid)             # panel hasil (VALIDATED / REJECTED + alasan)
+        return valid
 ```
 
 | Bagian | Isi |
 |---|---|
 | **Abstract method (3)** | `validate()`, `calculate_fee()`, `execute()` |
-| **Method konkret** | `process(amount)`, `get_total_charge()`, `describe()`, `__str__`, `_generate_reference()` |
+| **Method konkret** | `process(amount)`, `get_total_charge()`, `failure_reason()`, `describe()`, `__str__`, `_generate_reference()`, `_note()`, `_show_result()` |
 
-`process()` adalah method konkret yang setara dengan `jalankan()` di materi: ia **tidak perlu tahu** jenis pembayarannya, hanya memanggil `validate()` dan `execute()`, dan tiap subclass menjawab dengan caranya sendiri.
+`process()` adalah method konkret yang setara dengan `jalankan()` di materi: ia **tidak perlu tahu** jenis pembayarannya, hanya memanggil `validate()` dan `execute()`, dan tiap subclass menjawab dengan caranya sendiri. Tampilan panel hasil pembayaran (`_show_result()`) juga ditulis **sekali** di sini, sehingga ketiga metode (dan metode baru di masa depan) otomatis tampil seragam.
 
 ### 6.3 Subclass yang mengimplementasikan semua abstract method
 
 | Subclass | `validate()` | `calculate_fee()` | `execute()` |
 |---|---|---|---|
-| `CashPayment` | uang diterima ≥ total tagihan | Rp0 | hitung kembalian |
-| `BankTransferPayment` | nomor rekening angka 8–16 digit | Rp2.500 (tetap) | catat transfer via bank |
+| `CashPayment` | uang diterima ≥ total tagihan | Rp 0 | hitung kembalian |
+| `BankTransferPayment` | nomor rekening angka 8–16 digit | Rp 2.500 (tetap) | catat transfer via bank |
 | `EWalletPayment` | nomor HP valid dan saldo ≥ total tagihan | 1,5% dari nominal | kurangi saldo dompet digital |
 
 Contoh (`CashPayment`):
@@ -382,7 +416,14 @@ class CashPayment(PaymentMethod):
 
     def execute(self):
         self._change = self.cash_given - self.get_total_charge()
+        self._note(f"Cash received {ui.rupiah(self.cash_given)}, change {ui.rupiah(self._change)}")
+
+    def failure_reason(self):                   # override method konkret agar pesan spesifik
+        short = self.get_total_charge() - self.cash_given
+        return f"Cash is short by {ui.rupiah(short)}."
 ```
+
+`_note()` (milik `PaymentMethod`) dipakai subclass di `execute()` untuk menambahkan baris *Detail* pada panel hasil, sehingga `execute()` tidak perlu `print()` sendiri.
 
 ### 6.4 Abstract class kedua: `Person` (`models/person.py`)
 
@@ -403,7 +444,9 @@ class Person(ABC):
         """True jika notifikasi tersebut boleh dilihat pengguna ini."""
 ```
 
-Method konkretnya (dipakai bersama `Customer`, `Admin`, `SuperAdmin`): `set_password()`, `verify_password()`, `change_password()`, `update_profile()`, `show_person_info()`, dan `__str__`.
+Method konkretnya (dipakai bersama `Customer`, `Admin`, `SuperAdmin`): `set_password()`, `verify_password()`, `change_password()`, `update_profile()`, `info_pairs()`, `show_person_info()`, dan `__str__`; ditambah validator statis `check_name()`, `check_username()`, `check_phone()`, `check_gmail()`, `check_password()` yang dipakai setter **dan** formulir input (satu aturan, satu tempat).
+
+`show_person_info()` menampilkan kartu profil dari `info_pairs()`. `Customer` dan `Admin` meng-*override* `info_pairs()` untuk menambah baris khasnya (ID, alamat, membership, cabang, dst.), sehingga kartu profil tiap role berbeda **tanpa** `if role == ...` (polimorfisme).
 
 Subclass: `Customer(Person)`, `Admin(Person)`, dan `SuperAdmin(Admin)` — ketiganya mengimplementasikan seluruh abstract method.
 
@@ -453,24 +496,26 @@ except TypeError as error:
 Output sebenarnya dari program:
 
 ```text
-[1] Person abstract methods: ['can_see', 'get_permissions', 'get_role']
-[2] Mencoba membuat objek Person() ...
-    [V] TypeError: Can't instantiate abstract class Person without an implementation for abstract methods 'can_see', 'get_permissions', 'get_role'
+▌ [1] Person abstract methods: ['can_see', 'get_permissions', 'get_role']
+▌ [2] Mencoba membuat objek Person() ...
+✔ TypeError: Can't instantiate abstract class Person without an implementation for abstract methods 'can_see', 'get_permissions', 'get_role'
 
-[1] PaymentMethod abstract methods: ['calculate_fee', 'execute', 'validate']
-[2] Mencoba membuat objek PaymentMethod() ...
-    [V] TypeError: Can't instantiate abstract class PaymentMethod without an implementation for abstract methods 'calculate_fee', 'execute', 'validate'
+▌ [1] PaymentMethod abstract methods: ['calculate_fee', 'execute', 'validate']
+▌ [2] Mencoba membuat objek PaymentMethod() ...
+✔ TypeError: Can't instantiate abstract class PaymentMethod without an implementation for abstract methods 'calculate_fee', 'execute', 'validate'
 
-[3] Subclass yang lupa mengimplementasikan abstract method:
-    [V] TypeError: Can't instantiate abstract class IncompletePayment without an implementation for abstract methods 'calculate_fee', 'execute'
+▌ [3] Subclass yang lupa mengimplementasikan abstract method:
+✔ TypeError: Can't instantiate abstract class IncompletePayment without an implementation for abstract methods 'calculate_fee', 'execute'
 
-[4] Subclass lengkap berhasil dibuat:
-    [V] CashPayment -> Cash from Test (given Rp1,000) (fee Rp0)
-    [V] BankTransferPayment -> Bank transfer BRI ****5678 (fee Rp2,500)
-    [V] Customer -> Test (Customer)
-    [V] Admin -> Test (Admin)
-    [V] SuperAdmin -> Test (Super Admin)
+▌ [4] Subclass lengkap berhasil dibuat:
+✔ CashPayment -> Cash from Test (given Rp 1.000) (fee Rp 0)
+✔ BankTransferPayment -> Bank transfer BRI ****5678 (fee Rp 2.500)
+✔ Customer -> Test (Customer)
+✔ Admin -> Test (Admin)
+✔ SuperAdmin -> Test (Super Admin)
 ```
+
+(Pada terminal, `✔` tampil hijau dan `▌` sebagai penanda judul bagian.)
 
 Poin [3] membuktikan aturan kedua: `IncompletePayment` hanya mengimplementasikan `validate()`, jadi **ikut tidak bisa dibuat** dan Python menyebut method apa yang masih kurang. Poin [5] pada menu yang sama menjalankan `process()` pada tiga subclass untuk membuktikan method konkret bersama (lihat [bagian 11](#11-screenshot-output)).
 
@@ -506,13 +551,13 @@ payments = [CashPayment("Demo", 2_000_000),
             EWalletPayment("Demo", "GoPay", "081234567890", 5_000_000)]
 for payment in payments:
     payment._amount = 1_000_000
-    print(payment.method_name, payment.calculate_fee(), payment.describe())
+    print(payment.method_name, ui.rupiah(payment.calculate_fee()), payment.describe())
 ```
 
 ```text
-Cash          fee Rp        0 | Cash from Demo (given Rp2,000,000)
-BankTransfer  fee Rp    2,500 | Bank transfer BCA ******7890
-EWallet       fee Rp   15,000 | E-Wallet GoPay 081234567890
+Cash          fee         Rp 0 | Cash from Demo (given Rp 2.000.000)
+BankTransfer  fee     Rp 2.500 | Bank transfer BCA ******7890
+EWallet       fee    Rp 15.000 | E-Wallet GoPay 081234567890
 ```
 
 Di alur nyata, pola yang sama ada di `Sale.checkout()` (`models/sale.py`): ia cukup memanggil `payment.process(self.total)` tanpa mengecek jenis pembayaran.
@@ -539,7 +584,7 @@ class SuperAdmin(Admin):
         return list(store.branches)                 # semua cabang
 ```
 
-Kode lain cukup memanggil `user.accessible_branches(store)` tanpa peduli role. Misalnya `select_branch()` di `menus/admin_actions.py` berlaku untuk admin dan super admin sekaligus. Output uji (`OOP Testing → 4`):
+Pola yang sama dipakai untuk `info_pairs()` (kartu profil) dan `get_permissions()` (menu). Kode lain cukup memanggil `user.accessible_branches(store)` tanpa peduli role. Misalnya `select_branch()` di `menus/admin_actions.py` berlaku untuk admin dan super admin sekaligus. Output uji (`OOP Testing → 4`):
 
 ```text
 Customer     | permissions= 5 | can_see(notif cabang)=False
@@ -561,18 +606,20 @@ Perhatikan perbedaan baris terakhir: dengan dua cabang, admin hanya mendapat sat
 class EmailNotifier:
     def __init__(self, address): self.address = address
     def send(self, message):
-        print(f"  [EMAIL -> {self.address}] {message}")
+        _line("EMAIL", self.address, message, "cyan")
 
 class SMSNotifier:
     def __init__(self, phone): self.phone = phone
     def send(self, message):
-        print(f"  [SMS -> {self.phone}] {message}")
+        _line("SMS", self.phone, message, "magenta")
 
 class WhatsAppNotifier:
     def __init__(self, phone): self.phone = phone
     def send(self, message):
-        print(f"  [WHATSAPP -> {self.phone}] {message}")
+        _line("WHATSAPP", self.phone, message, "green")
 ```
+
+(`_line()` hanyalah fungsi kecil pembuat satu baris berwarna; ia bukan bagian dari pewarisan.)
 
 Semuanya dipanggil lewat **satu fungsi** yang sama:
 
@@ -586,9 +633,9 @@ def notify_customer(channels, message):
 Dipakai nyata di `OrderService._pay()` setelah pembayaran divalidasi (`build_channels(customer)` mengembalikan kanal Email dan SMS milik customer). Output uji:
 
 ```text
-[EMAIL -> demo@mail.com] Pesanan Anda sedang dikemas.
-[SMS -> 081234567890] Pesanan Anda sedang dikemas.
-[WHATSAPP -> 081234567890] Pesanan Anda sedang dikemas.
+EMAIL     › demo@mail.com  Pesanan Anda sedang dikemas.
+SMS       › 081234567890  Pesanan Anda sedang dikemas.
+WHATSAPP  › 081234567890  Pesanan Anda sedang dikemas.
 ```
 
 **Kenapa duck typing di sini dan ABC di pembayaran?** Pembayaran adalah hierarki yang kita kendalikan dan butuh *kontrak formal* (error saat instansiasi) sehingga memakai ABC. Kanal notifikasi bersifat longgar dan mudah ditambah (cukup kelas baru ber-`send()`), sehingga duck typing lebih sesuai.
@@ -600,7 +647,7 @@ Dipakai nyata di `OrderService._pay()` setelah pembayaran divalidasi (`build_cha
 | Kelas | Magic method | Fungsi | Dipakai di |
 |---|---|---|---|
 | `Product` | `__lt__`, `__gt__` | membandingkan harga | `sorted(products)` pada *View Products → urut harga* (`customer_actions.py`) |
-| `Product` | `__str__` | `[P001] Nama - Rp... (Stock: n)` | daftar produk |
+| `Product` | `__str__` | `[P001] Nama - Rp 750.000 (Stock: n)` | daftar produk |
 | `Sale` | `__len__` | jumlah item | `len(sale)` |
 | `Sale` | `__lt__`, `__gt__` | membandingkan total | perbandingan antar pesanan |
 | `Sale` | `__str__` | ringkasan pesanan | daftar pesanan di History |
@@ -632,7 +679,7 @@ Output uji (`OOP Testing → 4`):
 
 ```text
 Pricey > Cheap -> True (__gt__) | min() -> Cheap (__lt__)
-str(payment) -> Bank transfer BCA ******7890 (fee Rp2,500) (__str__)
+str(payment) -> Bank transfer BCA ******7890 (fee Rp 2.500) (__str__)
 len(sale) -> 1 (__len__) | len(branch) -> 1 products
 ```
 
@@ -659,19 +706,19 @@ Penggantinya di program ini: **biarkan objek menentukan perilakunya sendiri**.
 | Notifikasi yang boleh dilihat | Method `can_see()` per role | `models/admin.py`, `customer.py` |
 | Diskon per tier membership | Tabel data `Customer.DISCOUNT_RATES` | `models/customer.py` |
 | Penentuan tier dari total belanja | Tabel `Customer.TIERS` + `next(...)` | `models/customer.py` |
-| Pilihan metode pembayaran di menu | Dictionary `PAYMENT_OPTIONS` | `menus/payment_prompt.py` |
+| Pilihan metode pembayaran di menu | Tabel `PAYMENT_OPTIONS` (daftar tuple) | `menus/payment_prompt.py` |
+| Kartu profil per role | Method `info_pairs()` di-override | `models/person.py`, `customer.py`, `admin.py` |
+| Ringkasan dashboard per role | Tabel `SUMMARIES` dipilih lewat kunci permission | `menus/dashboard.py` |
 
 Dua contoh kodenya:
 
 ```python
 # menus/dashboard.py — menu dibangun dari permission milik objek user
+# ALL_ACTIONS berisi tuple (kunci_permission, label, handler, fungsi_catatan)
 def build_menu(app, user):
     permissions = user.get_permissions()
-    menu = []
-    for key, label, handler in ALL_ACTIONS:
-        if key in permissions:
-            menu.append((label(app, user) if callable(label) else label, handler))
-    return menu
+    return [(label, handler, note_fn)
+            for key, label, handler, note_fn in ALL_ACTIONS if key in permissions]
 
 # models/customer.py — tier ditentukan dari tabel data, bukan rantai if/elif
 new_tier = next(tier for limit, tier in Customer.TIERS if self.__total_spending >= limit)
@@ -701,7 +748,9 @@ def checkout(self, payment):
     self.payment = payment
     self.customer.add_points(int(self.total // 10000))
     self.customer.add_spending(self.total)
-    ...
+    self.handled_by.record_order()
+    self.is_completed = True
+    return True
 ```
 
 ### 8.2 OCP — Open/Closed Principle
@@ -718,17 +767,23 @@ class VoucherPayment(PaymentMethod):
         self.value = value
     def validate(self):    return self.value >= self._amount
     def calculate_fee(self): return 0
-    def execute(self):     print(f"          Voucher used: Rp{self._amount:,.0f}")
+    def execute(self):     self._note(f"Voucher used {ui.rupiah(self._amount)}")
 ```
 
-```text
-[OCP] VoucherPayment dibuat tanpa mengubah Sale / PaymentMethod / OrderService.
+Karena tampilan hasil pembayaran sudah ada di `PaymentMethod._show_result()`, `VoucherPayment` otomatis tampil seragam tanpa menulis kode tampilan:
 
-[Payment] Voucher | Payer: Demo Customer
-          Amount: Rp222,000 + Fee: Rp0 = Rp222,000
-          Voucher used: Rp222,000
-[V] Voucher payment SUCCESS. Ref: VOU-0011-220150
-[DIP] Sale.checkout() hanya bergantung pada abstraksi PaymentMethod -> berhasil: True
+```text
+▌ [OCP] VoucherPayment dibuat tanpa mengubah Sale / PaymentMethod / OrderService.
+┌─ PAYMENT › Voucher ──────────────────────────────────────────────────────┐
+│ Payer          Demo Customer                                             │
+│ Amount         Rp 222.000                                                │
+│ Fee            Rp 0                                                      │
+│ Total charge   Rp 222.000                                                │
+│ Detail         Voucher used Rp 222.000                                   │
+│ ✔ PAYMENT VALIDATED   Ref VOU-0011-223003                                │
+└──────────────────────────────────────────────────────────────────────────┘
+▌ [DIP] Sale.checkout() hanya bergantung pada abstraksi PaymentMethod
+✔ checkout berhasil: True
 ```
 
 Pada menu aplikasi, menambah metode baru hanya perlu satu baris di tabel `PAYMENT_OPTIONS` (`menus/payment_prompt.py`). Hal serupa berlaku untuk aksi menu baru: cukup satu entri di registry `ALL_ACTIONS` dan satu kunci permission.
@@ -743,6 +798,7 @@ Tanggung jawab dipisah per kelas:
 | `OrderService` | Mengatur alur request → order → pembayaran → log |
 | `Sale`, `OrderRequest` | Mewakili data dan aturan satu pesanan / satu request |
 | `menus/` | Hanya input dan tampilan |
+| `utils/ui.py` | Hanya komponen tampilan (warna, tabel, kotak); tidak tahu apa pun soal toko |
 
 Pemecahan dibuat seperlunya dan mengikuti alur program, bukan dipecah berlebihan hanya demi SOLID.
 
@@ -754,7 +810,7 @@ Bagian ini menelusuri alur belanja dari klik pertama sampai tercatat di history.
 
 ### Langkah 1 — Customer mengirim request
 
-`menus/customer_actions.py → shop()` mengumpulkan keranjang berupa daftar `(product, qty)`, lalu memanggil service:
+`menus/customer_actions.py → shop()` memilih cabang, lalu `menus/cart.py → build_cart()` menjalankan keranjang satu layar. Setiap perintah (nomor/ID, `/cari`, `R`, `C`, `S`, `Q`) memperbarui tabel produk, isi keranjang, dan estimasi harga di layar yang sama. Estimasi dihitung `Sale.estimate(subtotal, diskon%)` (classmethod, tanpa membuat objek `Sale`). Saat customer menekan `S` dan mengonfirmasi, daftar `(product, qty)` dikirim ke service:
 
 ```python
 request = safe(lambda: app.service.submit_request(user, branch, cart, note))
@@ -771,7 +827,8 @@ def submit_request(self, customer, branch, items, note=""):
         request.add_item(product, qty)              # validasi stok; SaleItem dibuat di dalam (komposisi)
     self.app.requests.append(request)
     self.app.notify(                                 # notifikasi untuk admin cabang tersebut
-        f"New request {request.id_request} from {customer.name} ...",
+        f"New request {request.id_request} from {customer.name} "
+        f"({len(request)} item, est. {ui.rupiah(request.estimated_total)})",
         branch=branch, request=request)
     self.app.log.add(ActivityLog.REQUEST, customer.name,
                      f"Created request {request.id_request}", branch, request.estimated_total)
@@ -790,14 +847,18 @@ def inbox(self, user):
     return [n for n in reversed(self.notifications) if user.can_see(n)]
 ```
 
-Admin Samarinda hanya melihat notifikasi cabang Samarinda; super admin melihat semua cabang; customer hanya melihat notifikasi miliknya.
+Admin Samarinda hanya melihat notifikasi cabang Samarinda; super admin melihat semua cabang; customer hanya melihat notifikasi miliknya. Pada layar notifikasi, admin bisa langsung membuka request yang masih `PENDING` dari daftar (memanggil `process_request()` yang sama dengan menu *Customer Requests*).
 
 ### Langkah 4 — Admin memproses request dan memvalidasi pembayaran
 
-`menus/admin_actions.py → process_request()` menampilkan detail, meminta admin memilih metode pembayaran (`choose_payment()` → membuat objek `CashPayment` / `BankTransferPayment` / `EWalletPayment`), lalu memanggil:
+`menus/admin_actions.py → process_request()` menampilkan detail request, tabel *Stock check*, dan rincian total. Bila stok cukup, admin memilih *Create order & validate payment*. Fungsi `pay_and_finish()` lalu:
+
+1. memanggil `choose_payment()` → membuat objek `CashPayment` / `BankTransferPayment` / `EWalletPayment` dari tabel `PAYMENT_OPTIONS`;
+2. memanggil service `fulfill_request(request, user, payment)`;
+3. bila gagal, menampilkan alasan dari `payment.failure_reason()` dan menawarkan *Try another payment method?* (stok sudah dikembalikan).
 
 ```python
-sale = safe(lambda: app.service.fulfill_request(request, user, payment))
+sale = safe(lambda: create_order(payment))   # create_order = fulfill_request(...)
 ```
 
 ### Langkah 5 — Pesanan resmi dibuat dan pembayaran divalidasi
@@ -812,7 +873,7 @@ def fulfill_request(self, request, admin, payment):
         return None                                  # gagal: request tetap PENDING
     request.mark_completed(sale, admin)
     self.app.notify(f"Your request {request.id_request} is completed as order {sale.id_sale}. "
-                    f"Total Rp{sale.total:,.0f}", customer=request.customer, request=request)
+                    f"Total {ui.rupiah(sale.total)}", customer=request.customer, request=request)
     return sale
 
 def _build_sale(self, admin, customer, branch, items):
@@ -842,11 +903,11 @@ def _pay(self, sale, payment):
                      f"Order {sale.id_sale} for {sale.customer.name} paid via {payment.method_name}",
                      sale.branch, sale.total)
     notify_customer(build_channels(sale.customer),          # duck typing: Email + SMS
-                    f"Payment for {sale.id_sale} (Rp{sale.total:,.0f}) validated. Thank you!")
+                    f"Payment for {sale.id_sale} ({ui.rupiah(sale.total)}) validated. Thank you!")
     return True
 ```
 
-Menu **History / Log** (`admin_actions.history`) menampilkan (a) daftar pesanan selesai beserta struk dan (b) *activity log* (`REQUEST`, `ORDER`, `REJECTED`, `PRODUCT`) yang difilter berdasarkan `user.accessible_branches(store)`, sehingga admin hanya melihat cabangnya dan super admin melihat semuanya.
+Menu **History / Log** (`admin_actions.history`) menampilkan (a) daftar pesanan selesai beserta struk, (b) semua request (semua status), dan (c) *activity log* berbentuk *feed* (`REQUEST`, `ORDER`, `REJECTED`, `PRODUCT`, `ACCOUNT`, `STORE`) yang difilter berdasarkan `user.accessible_branches(store)`, sehingga admin hanya melihat cabangnya dan super admin melihat semuanya.
 
 ### Alur penolakan
 
@@ -875,15 +936,21 @@ Tidak perlu `pip install` apa pun.
 
 ### Skenario uji alur belanja
 
-1. Login `rina_m` → **Shop** → pilih cabang Samarinda → tambah produk → **Send request**.
-2. Logout, login `admin_smr` → menu **Notifications** (terlihat request baru) → **Customer Requests** → pilih request → **Create order & validate payment** → pilih metode dan isi data → struk muncul.
-3. **History / Log** → lihat struk dan catatan `ORDER`.
-4. Login ulang `rina_m` → **My Orders / Status** (status `COMPLETED`) dan **Notifications**.
-5. Login `superadmin` → **Manage Admins**, **Store Profile**, **Manage Branches**.
+Menu utama: `1` Login, `2` Register as customer, `3` OOP Testing, `0` Exit.
+
+1. Login `rina_m` → dashboard customer → **Shop** → pilih cabang Samarinda → ketik `1` (tambah produk 1, isi jumlah) → ketik `/mouse` (cari) → ketik `S` → isi catatan → konfirmasi **Send request**.
+2. **My Orders / Status** → request baru berstatus `PENDING` dengan alur progres. Logout (`0`).
+3. Login `admin_smr` → dashboard admin (angka *Pending* bertambah, `Notifications` berlencana) → **Notifications** atau **Customer Requests** → pilih request → cek *Stock check* → **Create order & validate payment** → pilih metode (`1` Cash, `2` Bank Transfer, `3` E-Wallet) → struk muncul. Coba juga isi uang kurang untuk melihat pembayaran ditolak dan ditawari metode lain.
+4. **History / Log** → *Completed orders* (buka struk), *All requests*, dan *Activity log*.
+5. Login ulang `rina_m` → dashboard (status `COMPLETED`, notifikasi baru) → **My Orders / Status** dan **Notifications**.
+6. Login `superadmin` → **Manage Admins** (buat admin baru), **Store Profile**, **Manage Branches**.
+7. Untuk jalur penolakan: di langkah 3 pilih **Reject request**, isi alasan; customer menerima notifikasinya.
 
 Data awal sudah berisi dua cabang (Samarinda, Balikpapan), beberapa produk, tiga customer, dua pesanan selesai, dan satu request yang masih menunggu (milik `nadia_putri` di Samarinda).
 
 ### Menu OOP Testing (menu utama → 3)
+
+Di menu ini `1`–`5` menjalankan satu uji, `6` menjalankan semuanya, dan `0` kembali.
 
 | Menu | Yang dibuktikan |
 |---|---|
@@ -900,25 +967,49 @@ Menu pengujian memakai objek sementara sehingga data utama tidak berubah.
 
 ## 11. Screenshot Output
 
-> Screenshot di bawah dirender dari output asli program.
+> Semua screenshot dirender dari **output asli program** (warna ANSI ikut dirender), bukan gambar rekaan.
 
-### 11.1 Alur belanja
+### 11.1 Alur belanja (UI baru)
 
-**Customer mengirim request**
+**① Dashboard customer** — tier, progres membership, kartu statistik, aktivitas terbaru, dan menu berlencana.
 
-![Customer request](assets/flow_1_customer_request.png)
+![Dashboard customer](assets/ui_1_customer_dashboard.png)
 
-**Admin memproses request, memvalidasi pembayaran, dan pesanan dibuat** (perhatikan notifikasi Email dan SMS dari duck typing)
+**② Keranjang satu layar** — produk, isi keranjang, dan estimasi harga tampil bersamaan; perintah singkat di bagian bawah.
 
-![Admin order](assets/flow_3_admin_order_payment.png)
+![Keranjang](assets/ui_2_customer_cart.png)
 
-**History / log**
+**③ Request terkirim** — ringkasan, konfirmasi, dan penjelasan langkah selanjutnya.
 
-![Log](assets/flow_4_history_log.png)
+![Request terkirim](assets/ui_3_request_sent.png)
+
+**④ Dashboard admin** — kartu statistik, daftar yang perlu perhatian, dan lencana pada menu.
+
+![Dashboard admin](assets/ui_4_admin_dashboard.png)
+
+**⑤ Admin memproses request** — detail request, cek stok, rincian total, dan pilihan tindakan.
+
+![Proses request](assets/ui_5_admin_process_request.png)
+
+**⑥ Validasi pembayaran** — pilihan metode, panel hasil pembayaran (dibuat sekali oleh `PaymentMethod`), dan notifikasi Email/SMS (duck typing).
+
+![Pembayaran](assets/ui_6_payment.png)
+
+**⑦ Struk pesanan**
+
+![Struk](assets/ui_7_receipt.png)
+
+**⑧ History / activity log** — tercatat: request dibuat, pesanan selesai, dan request ditolak.
+
+![Activity log](assets/ui_8_activity_log.png)
+
+**⑨ Dashboard super admin** — ditambah ringkasan semua cabang dan menu pengelolaan admin/toko/cabang.
+
+![Dashboard super admin](assets/ui_9_super_admin_dashboard.png)
 
 ### 11.2 Abstraksi
 
-**Abstract class tidak bisa diinstansiasi (OOP Testing → 3)**
+**Abstract class tidak bisa diinstansiasi (OOP Testing → 3)** — `TypeError` untuk `Person` dan `PaymentMethod`, subclass tidak lengkap ikut ditolak, dan `process()` dipakai bersama tiga subclass.
 
 ![Abstraction](assets/test_abstraction.png)
 
@@ -936,6 +1027,10 @@ Menu pengujian memakai objek sementara sehingga data utama tidak berubah.
 
 ![SOLID](assets/test_solid.png)
 
+### 11.6 Enkapsulasi
+
+![Encapsulation](assets/test_encapsulation.png)
+
 ---
 
 ## 12. Catatan Desain dan Keterbatasan
@@ -943,4 +1038,6 @@ Menu pengujian memakai objek sementara sehingga data utama tidak berubah.
 - Data disimpan **di memori** (`AppData`), sehingga kembali ke data awal setiap program dijalankan ulang. Ini disengaja agar fokus pada konsep OOP.
 - Status "sudah dibaca" pada notifikasi dipakai bersama oleh semua yang bisa melihat notifikasi itu (admin cabang dan super admin).
 - Password disimpan apa adanya (tanpa hashing) karena program ini hanya simulasi pembelajaran.
+- Tampilan memakai kode warna ANSI dan karakter kotak Unicode. Bila terminal lama menampilkannya salah, jalankan dengan `NO_COLOR=1` (tanpa warna) dan/atau `FORCE_ASCII=1` (simbol ASCII).
+- Tabel yang terlalu lebar untuk 76 kolom dipersingkat otomatis; detail lengkap selalu tersedia di layar detail (misalnya detail request atau struk).
 - `seed.py` membuat data awal lewat `OrderService` yang sama dengan aplikasi (outputnya disembunyikan), sehingga riwayat awal konsisten dengan alur sebenarnya.

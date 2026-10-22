@@ -1,3 +1,4 @@
+from utils import ui
 class SaleItem:
     """Satu baris barang. Dibuat di dalam Sale / OrderRequest (komposisi)."""
 
@@ -14,4 +15,4 @@ class SaleItem:
         return self.unit_price * self.quantity
 
     def __str__(self):
-        return f"{self.product_name} x{self.quantity} @ Rp{self.unit_price:,.0f} = Rp{self.subtotal:,.0f}"
+        return f"{self.product_name} x{self.quantity} @ {ui.rupiah(self.unit_price)} = {ui.rupiah(self.subtotal)}"

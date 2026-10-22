@@ -1,5 +1,6 @@
 from datetime import datetime
 from models.sale_item import SaleItem
+from utils import ui
 
 
 class OrderRequest:
@@ -51,21 +52,22 @@ class OrderRequest:
         self.status, self.handled_by, self.reject_reason = OrderRequest.REJECTED, admin, reason
 
     def show(self):
-        print(f"Request   : {self.id_request}  [{self.status}]")
-        print(f"Customer  : {self.customer.name} ({self.customer.membership_tier})")
-        print(f"Branch    : {self.branch.name}")
-        print(f"Created   : {self.created_at:%Y-%m-%d %H:%M}")
-        if self.note:
-            print(f"Note      : {self.note}")
-        for i, item in enumerate(self._items, 1):
-            print(f"  {i}. {item}")
-        print(f"Estimated subtotal: Rp{self.estimated_total:,.0f}")
-        if self.reject_reason:
-            print(f"Rejected reason: {self.reject_reason}")
+        lines = ui.kv_lines([
+            ("Request", f"{ui.c(self.id_request, 'bold')}   {ui.status_badge(self.status)}"),
+            ("Customer", f"{self.customer.name} ({ui.tier_badge(self.customer.membership_tier)})"),
+            ("Branch", self.branch.name),
+            ("Created", f"{self.created_at:%Y-%m-%d %H:%M}  ({ui.time_ago(self.created_at)})"),
+        ] + ([("Note", self.note)] if self.note else [])
+          + ([("Rejected", ui.c(self.reject_reason, "red"))] if self.reject_reason else [])
+          + ([("Handled by", self.handled_by.name)] if self.handled_by else []), 11)
+        ui.panel("REQUEST DETAIL", lines, "cyan")
+        ui.table(["Item", "Qty", "Unit price", "Subtotal"],
+                 [[i.product_name, str(i.quantity), ui.rupiah(i.unit_price), ui.rupiah(i.subtotal)]
+                  for i in self._items], ["l", "r", "r", "r"])
 
     def __len__(self):
         return len(self._items)
 
     def __str__(self):
         return (f"{self.id_request} | {self.customer.name} | {self.branch.name} | "
-                f"{len(self)} item(s) | Rp{self.estimated_total:,.0f} | {self.status}")
+                f"{len(self)} item(s) | {ui.rupiah(self.estimated_total)} | {self.status}")

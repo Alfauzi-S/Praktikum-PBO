@@ -1,3 +1,5 @@
+from datetime import date
+
 from models.customer import Customer
 from models.admin import Admin
 from models.notification import Notification
@@ -80,3 +82,16 @@ class AppData:
 
     def pending_requests(self, branches):
         return [r for r in self.requests if r.status == r.PENDING and r.branch in branches]
+
+    # ---------- Statistik untuk dashboard ----------
+    def sales_for(self, branches, today_only=False):
+        sales = [s for s in self.sales if s.branch in branches]
+        if today_only:
+            sales = [s for s in sales if s.created_at.date() == date.today()]
+        return sales
+
+    def revenue_for(self, branches, today_only=False):
+        return sum(s.total for s in self.sales_for(branches, today_only))
+
+    def requests_of(self, customer):
+        return [r for r in reversed(self.requests) if r.customer is customer]

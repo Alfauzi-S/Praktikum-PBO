@@ -1,64 +1,136 @@
+"""Fungsi bantu input: prompt bergaya, validasi per kolom, form, pemilih bernomor."""
+import getpass
 import os
 import sys
 
+from utils import ui
+
+CANCEL_WORD = "/q"
+
 
 def clear_screen():
-    if sys.stdin.isatty():
+    if sys.stdin.isatty() and sys.stdout.isatty():
         os.system("cls" if os.name == "nt" else "clear")
 
 
-def pause():
-    input("\nPress ENTER to continue...")
+def pause(message="Press ENTER to continue"):
+    input(ui.c(f"\n  {ui.SYM['enter']} {message} ", "dim"))
 
 
-def header(title):
-    print("=" * 56)
-    print(title.center(56))
-    print("=" * 56)
-
-
-def ask(prompt, default=None):
-    text = input(f"{prompt}" + (f" [{default}]" if default not in (None, "") else "") + ": ").strip()
-    return text if text else (default if default is not None else "")
-
-
-def ask_int(prompt, minimum=None):
+# ------------------------------------------------------------------ konversi + validasi angka
+def to_int(value, minimum=None):
     try:
-        value = int(input(f"{prompt}: ").strip())
+        number = int(str(value).replace(",", "").replace("_", "").strip())
     except ValueError:
-        print("[!] Please enter a whole number!")
-        return None
-    if minimum is not None and value < minimum:
-        print(f"[!] Value must be at least {minimum}!")
-        return None
-    return value
+        raise ValueError("Please enter a whole number (e.g. 3).")
+    if minimum is not None and number < minimum:
+        raise ValueError(f"Value must be at least {minimum}.")
+    return number
 
 
-def ask_float(prompt):
+def to_float(value):
     try:
-        return float(input(f"{prompt}: ").strip())
+        return float(str(value).replace(",", "").replace("_", "").strip())
     except ValueError:
-        print("[!] Please enter a number!")
-        return None
+        raise ValueError("Please enter a number (e.g. 150000).")
 
 
-def confirm(prompt):
-    return input(f"{prompt} (y/n): ").strip().lower() == "y"
+# ------------------------------------------------------------------ prompt dasar
+def ask(label, default=None, secret=False):
+    shown = f" [{default}]" if default not in (None, "") else ""
+    prompt = f"  {ui.c(ui.SYM['arrow'], 'bold', 'cyan')} {label}{ui.c(shown, 'dim')}: "
+    if secret and sys.stdin.isatty():
+        text = getpass.getpass(prompt).strip()
+    else:
+        text = input(prompt).strip()
+    return text if text else (str(default) if default not in (None,) else "")
 
 
-def pick(items, title, label=str):
-    """Tampilkan daftar bernomor, kembalikan item terpilih (atau None jika batal)."""
+def ask_valid(label, checker=None, default=None, required=True, secret=False):
+    """Tanya sampai valid. Mengembalikan nilai, atau None jika pengguna mengetik /q."""
+    while True:
+        raw = ask(label, default, secret)
+        if raw.lower() == CANCEL_WORD:
+            return None
+        if raw == "":
+            if not required:
+                return ""
+            ui.err("This field is required.")
+            continue
+        if checker is None:
+            return raw
+        try:
+            return checker(raw)
+        except ValueError as error:
+            ui.err(str(error))
+
+
+def ask_int(label, minimum=None, default=None):
+    return ask_valid(label, lambda v: to_int(v, minimum), default)
+
+
+def ask_float(label, default=None):
+    return ask_valid(label, to_float, default)
+
+
+def confirm(label, default=False):
+    suffix = "[Y/n]" if default else "[y/N]"
+    answer = input(f"  {ui.c('?', 'bold', 'yellow')} {label} {ui.c(suffix, 'dim')}: ").strip().lower()
+    if answer == "":
+        return default
+    return answer in {"y", "yes", "ya"}
+
+
+def run_form(title, fields, crumb=""):
+    """Form beberapa kolom. fields = [dict(key, label, checker, default, required, secret)].
+
+    Setiap kolom divalidasi langsung (salah -> diulang). Ketik /q untuk membatalkan.
+    """
+    ui.screen(title, crumb)
+    ui.hint(f"Type {CANCEL_WORD} at any prompt to cancel.")
+    print()
+    data = {}
+    for field in fields:
+        value = ask_valid(field["label"], field.get("checker"), field.get("default"),
+                          field.get("required", True), field.get("secret", False))
+        if value is None:
+            ui.warn("Cancelled.")
+            return None
+        data[field["key"]] = value
+    return data
+
+
+# ------------------------------------------------------------------ pemilih
+def choose(items, label=str, title=None, headers=None, row=None, aligns=None, prompt="Select number"):
+    """Pilih satu item dari daftar bernomor. Kembalikan item, atau None jika batal (0 atau /q)."""
     if not items:
-        print("  (nothing to show)")
+        ui.hint("Nothing to choose from.")
         return None
-    print(f"\n{title}")
-    for i, item in enumerate(items, 1):
-        print(f"  {i}. {label(item)}")
-    print("  0. Cancel")
-    number = ask_int("Choose number", 0)
-    if not number or number > len(items):
-        return None
-    return items[number - 1]
+    if headers and row:
+        ui.table(["#"] + headers, [[str(i)] + list(row(item)) for i, item in enumerate(items, 1)],
+                 ["r"] + (aligns or ["l"] * len(headers)), title=title)
+    else:
+        if title:
+            ui.section(title)
+        for i, item in enumerate(items, 1):
+            print(f"  {ui.c(f'{i:>2}', 'bold', 'cyan')}  {label(item)}")
+    print(ui.c("   0  Cancel", "dim"))
+    while True:
+        raw = ask(f"{prompt} (0 = cancel)")
+        if raw in {"0", "", CANCEL_WORD}:
+            return None
+        if raw.isdigit() and 1 <= int(raw) <= len(items):
+            return items[int(raw) - 1]
+        ui.err(f"Enter a number between 1 and {len(items)}, or 0 to cancel.")
+
+
+def read_menu_choice(count):
+    """Baca pilihan menu 0..count. Kembalikan int atau None jika tidak valid."""
+    raw = ask("Select")
+    if raw.isdigit() and 0 <= int(raw) <= count:
+        return int(raw)
+    ui.err(f"Please choose a number between 0 and {count}.")
+    return None
 
 
 def safe(action):
@@ -66,5 +138,5 @@ def safe(action):
     try:
         return action()
     except ValueError as error:
-        print(f"[!] {error}")
+        ui.err(str(error))
         return None

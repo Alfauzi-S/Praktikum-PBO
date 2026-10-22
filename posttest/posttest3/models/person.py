@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from utils import ui
+
 
 class Person(ABC):
     """Abstract base class untuk semua pengguna sistem (Customer, Admin, SuperAdmin).
@@ -39,6 +41,40 @@ class Person(ABC):
     def can_see(self, notification):
         """True jika notifikasi tersebut boleh dilihat pengguna ini."""
 
+    # ---------- Validator (dipakai setter DAN form di menu agar aturannya satu) ----------
+    @staticmethod
+    def check_name(value):
+        if not value or value.strip() == "":
+            raise ValueError("Name cannot be empty!")
+        return value.strip()
+
+    @staticmethod
+    def check_username(value):
+        value = (value or "").strip()
+        if len(value) < 3 or " " in value:
+            raise ValueError("Username must be at least 3 characters with no spaces!")
+        return value
+
+    @staticmethod
+    def check_phone(value):
+        value = (value or "").strip()
+        if not value.isdigit() or not 10 <= len(value) <= 13:
+            raise ValueError("Phone must be 10-13 digits (numbers only)!")
+        return value
+
+    @staticmethod
+    def check_gmail(value):
+        value = (value or "").strip().lower()
+        if " " in value or "@" not in value or "." not in value.split("@")[-1]:
+            raise ValueError("Invalid email format! Example: user@gmail.com")
+        return value
+
+    @staticmethod
+    def check_password(value):
+        if not value or len(value) < 6:
+            raise ValueError("Password must be at least 6 characters!")
+        return value
+
     # ---------- Properti dengan validasi ----------
     @property
     def name(self):
@@ -46,9 +82,7 @@ class Person(ABC):
 
     @name.setter
     def name(self, value):
-        if not value or value.strip() == "":
-            raise ValueError("Name cannot be empty!")
-        self._name = value.strip()
+        self._name = Person.check_name(value)
 
     @property
     def username(self):
@@ -56,10 +90,7 @@ class Person(ABC):
 
     @username.setter
     def username(self, value):
-        value = (value or "").strip()
-        if len(value) < 3 or " " in value:
-            raise ValueError("Username must be at least 3 characters and contain no spaces!")
-        self._username = value
+        self._username = Person.check_username(value)
 
     @property
     def phone(self):
@@ -67,10 +98,7 @@ class Person(ABC):
 
     @phone.setter
     def phone(self, value):
-        value = (value or "").strip()
-        if not value.isdigit() or not 10 <= len(value) <= 13:
-            raise ValueError("Phone must be 10-13 digits!")
-        self._phone = value
+        self._phone = Person.check_phone(value)
 
     @property
     def gmail(self):
@@ -78,16 +106,11 @@ class Person(ABC):
 
     @gmail.setter
     def gmail(self, value):
-        value = (value or "").strip().lower()
-        if " " in value or "@" not in value or "." not in value.split("@")[-1]:
-            raise ValueError("Invalid email format! Example: user@gmail.com")
-        self.__gmail = value
+        self.__gmail = Person.check_gmail(value)
 
     # ---------- Akun ----------
     def set_password(self, new_password):
-        if not new_password or len(new_password) < 6:
-            raise ValueError("Password must be at least 6 characters!")
-        self.__password = new_password
+        self.__password = Person.check_password(new_password)
 
     def verify_password(self, password):
         return self.__password == password
@@ -110,16 +133,22 @@ class Person(ABC):
         if gender is not None:
             self.gender = gender
 
+    def info_pairs(self):
+        """Pasangan (label, nilai) untuk kartu profil. Di-override subclass (polimorfisme)."""
+        return [
+            ("Role", ui.c(self.get_role(), "bold")),
+            ("Name", self._name),
+            ("Username", self._username),
+            ("Password", "********"),
+            ("Phone", self._phone),
+            ("Email", self.__gmail),
+            ("Birth date", self.birth_date or "-"),
+            ("Gender", self.gender or "-"),
+            ("Status", ui.status_badge("Active" if self.is_active else "Inactive")),
+        ]
+
     def show_person_info(self):
-        print(f"Role                  : {self.get_role()}")
-        print(f"Name                  : {self._name}")
-        print(f"Username              : {self._username}")
-        print(f"Password              : {'*' * 8}")
-        print(f"Phone                 : {self._phone}")
-        print(f"Email                 : {self.__gmail}")
-        print(f"Birth Date            : {self.birth_date or '-'}")
-        print(f"Gender                : {self.gender or '-'}")
-        print(f"Status                : {'Active' if self.is_active else 'Inactive'}")
+        ui.panel("PROFILE", ui.kv_lines(self.info_pairs(), 12), "cyan")
 
     def __str__(self):
         return f"{self._name} ({self.get_role()})"

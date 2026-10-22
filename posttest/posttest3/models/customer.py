@@ -1,4 +1,5 @@
 from models.person import Person
+from utils import ui
 
 
 class Customer(Person):
@@ -25,15 +26,19 @@ class Customer(Person):
     def can_see(self, notification):
         return notification.customer is self
 
+    @staticmethod
+    def check_address(value):
+        if not value or value.strip() == "":
+            raise ValueError("Address cannot be empty!")
+        return value.strip()
+
     @property
     def address(self):
         return self._address
 
     @address.setter
     def address(self, value):
-        if not value or value.strip() == "":
-            raise ValueError("Address cannot be empty!")
-        self._address = value.strip()
+        self._address = Customer.check_address(value)
 
     def update_profile(self, address=None, **kwargs):
         super().update_profile(**kwargs)
@@ -48,6 +53,25 @@ class Customer(Person):
     def discount_percentage(self):
         return int(Customer.DISCOUNT_RATES[self.membership_tier] * 100)
 
+    # ---------- Progres tier (untuk ditampilkan di dashboard) ----------
+    def next_tier(self):
+        """(nama_tier_berikutnya, sisa_belanja) atau None jika sudah tertinggi."""
+        higher = [(limit, tier) for limit, tier in Customer.TIERS if limit > self.__total_spending]
+        if not higher:
+            return None
+        limit, tier = min(higher)
+        return tier, limit - self.__total_spending
+
+    @property
+    def tier_progress(self):
+        """Rasio 0..1 menuju tier berikutnya."""
+        floor = next(limit for limit, tier in Customer.TIERS if tier == self.membership_tier)
+        higher = [limit for limit, _ in Customer.TIERS if limit > floor]
+        if not higher:
+            return 1.0
+        ceiling = min(higher)
+        return (self.__total_spending - floor) / (ceiling - floor)
+
     def add_spending(self, amount):
         if amount < 0:
             raise ValueError("Spending cannot be negative!")
@@ -58,7 +82,7 @@ class Customer(Person):
         # Tier ditentukan dari tabel data, bukan rantai if/elif
         new_tier = next(tier for limit, tier in Customer.TIERS if self.__total_spending >= limit)
         if new_tier != self.membership_tier:
-            print(f"[+] {self._name} moved from [{self.membership_tier}] to [{new_tier}]")
+            ui.ok(f"{ui.SYM['star']} {self._name} moved from {self.membership_tier} to {ui.tier_badge(new_tier)}!")
             self.membership_tier = new_tier
 
     def add_points(self, points):
@@ -66,10 +90,15 @@ class Customer(Person):
             raise ValueError("Points cannot be negative!")
         self.loyalty_points += points
 
-    def show_person_info(self):
-        super().show_person_info()
-        print(f"Customer ID           : {self.id_customer}")
-        print(f"Address               : {self._address}")
-        print(f"Membership            : {self.membership_tier} ({self.discount_percentage}% discount)")
-        print(f"Loyalty Points        : {self.loyalty_points}")
-        print(f"Total Spending        : Rp{self.__total_spending:,.0f}")
+    def info_pairs(self):
+        nxt = self.next_tier()
+        progress = (f"{ui.progress_bar(self.tier_progress, 14)} {ui.rupiah(nxt[1])} to {nxt[0]}"
+                    if nxt else "Highest tier reached")
+        return super().info_pairs() + [
+            ("Customer ID", self.id_customer),
+            ("Address", self._address),
+            ("Membership", f"{ui.tier_badge(self.membership_tier)} ({self.discount_percentage}% discount)"),
+            ("Progress", progress),
+            ("Points", str(self.loyalty_points)),
+            ("Total spent", ui.rupiah(self.__total_spending)),
+        ]

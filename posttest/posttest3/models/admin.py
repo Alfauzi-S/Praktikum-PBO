@@ -1,4 +1,5 @@
 from models.person import Person
+from utils import ui
 
 
 class Admin(Person):
@@ -36,11 +37,12 @@ class Admin(Person):
     def record_order(self):
         self._orders_processed += 1
 
-    def show_person_info(self):
-        super().show_person_info()
-        print(f"Employee ID           : {self.employee_id}")
-        print(f"Branch                : {self.branch.name if self.branch else '-'}")
-        print(f"Orders Processed      : {self._orders_processed}")
+    def info_pairs(self):
+        return super().info_pairs() + [
+            ("Employee ID", self.employee_id),
+            ("Branch", self.branch.name if self.branch else "All branches"),
+            ("Orders handled", str(self._orders_processed)),
+        ]
 
 
 class SuperAdmin(Admin):

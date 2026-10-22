@@ -1,3 +1,4 @@
+from utils import ui
 from datetime import datetime
 
 
@@ -11,7 +12,7 @@ class LogEntry:
         self.created_at = datetime.now()
 
     def __str__(self):
-        amount = f" | Rp{self.amount:,.0f}" if self.amount else ""
+        amount = f" | {ui.rupiah(self.amount)}" if self.amount else ""
         branch = f" | {self.branch.name}" if self.branch else ""
         return f"[{self.created_at:%Y-%m-%d %H:%M}] {self.kind:<10} | {self.actor}{branch} | {self.message}{amount}"
 

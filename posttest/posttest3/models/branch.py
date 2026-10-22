@@ -46,6 +46,9 @@ class Branch:
         numbers = [int(p.id_product[1:]) for p in self._products if p.id_product[1:].isdigit()]
         return f"P{max(numbers, default=0) + 1:03d}"
 
+    def low_stock_products(self):
+        return [p for p in self._products if p.is_low_stock]
+
     # ---------- Admin ----------
     def add_admin(self, admin):
         if admin not in self._admins:
